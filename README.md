@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="Claude Code — In Your Code" width="700" />
+</p>
+
 # claude-connector
 
 Programmatic Node.js interface for [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) CLI.
