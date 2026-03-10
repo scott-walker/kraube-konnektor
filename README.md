@@ -4,6 +4,8 @@ Programmatic Node.js interface for [Claude Code](https://docs.anthropic.com/en/d
 
 Use Claude Code from your application code — no terminal required. Works with your existing Max/Team/Enterprise subscription.
 
+**[Website](https://scott-walker.github.io/claude-connector/)** | **[API Reference](./docs/API.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
+
 ---
 
 ## Why
