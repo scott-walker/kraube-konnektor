@@ -1,0 +1,17 @@
+{
+  "name": "claude-connector-integration-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx src/index.ts",
+    "test:pack": "cd ../.. && npm run build && npm pack --pack-destination ./examples/integration-test/tmp && cd examples/integration-test && npm install ./tmp/claude-connector-0.1.0.tgz && npx tsx src/index.ts"
+  },
+  "dependencies": {
+    "claude-connector": "file:../../"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

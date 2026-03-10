@@ -1,0 +1,56 @@
+{
+  "name": "claude-connector",
+  "version": "0.1.0",
+  "description": "Programmatic Node.js interface for Claude Code CLI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test:integration": "npm run build && cd examples/integration-test && npm install && npx tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "cli",
+    "anthropic",
+    "agent"
+  ],
+  "author": "Scott Walker",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scott-walker/claude-connector.git"
+  },
+  "homepage": "https://github.com/scott-walker/claude-connector#readme",
+  "bugs": {
+    "url": "https://github.com/scott-walker/claude-connector/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
