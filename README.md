@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="etc/logo-rounded.svg" alt="Claude Code — In Your Code" width="700" />
+  <img src="etc/logo-rounded.svg" alt="Claude Code — In Your Code" width="350" />
 </p>
 
 # claude-connector
