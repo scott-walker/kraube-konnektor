@@ -1,0 +1,17 @@
+{
+  "name": "claude-connector-interactive-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx src/chat.ts",
+    "stream": "npx tsx src/chat-stream.ts"
+  },
+  "dependencies": {
+    "claude-connector": "file:../../"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

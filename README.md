@@ -400,6 +400,21 @@ const claude = new Claude({ model: 'opus' }, new MockExecutor())
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed design documentation.
 
+## Examples
+
+| Example | Description |
+|---------|-------------|
+| [`examples/interactive-chat`](./examples/interactive-chat) | Terminal chat — ask questions, get answers in real time |
+| [`examples/integration-test`](./examples/integration-test) | Package integration test (mock executor) |
+
+```bash
+# Try the interactive chat:
+cd examples/interactive-chat
+npm install
+npm start          # standard mode
+npm run stream     # streaming mode (word by word)
+```
+
 ## Documentation
 
 | Document | Description |
