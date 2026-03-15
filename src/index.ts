@@ -6,7 +6,7 @@
  * ## Quick start
  *
  * ```ts
- * import { Claude } from 'claude-connector'
+ * import { Claude } from '@scottwalker/claude-connector'
  *
  * const claude = new Claude({ model: 'sonnet' })
  * const result = await claude.query('Find bugs in auth.ts')

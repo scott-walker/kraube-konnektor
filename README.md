@@ -31,13 +31,13 @@ Claude Code is a powerful AI coding agent, but it only runs in a terminal. **cla
 ## Install
 
 ```bash
-npm install claude-connector
+npm install @scottwalker/claude-connector
 ```
 
 ## Quick Start
 
 ```typescript
-import { Claude } from 'claude-connector'
+import { Claude } from '@scottwalker/claude-connector'
 
 const claude = new Claude()
 
@@ -324,7 +324,7 @@ import {
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from 'claude-connector'
+} from '@scottwalker/claude-connector'
 
 try {
   const result = await claude.query('Fix the bug')
@@ -353,7 +353,7 @@ try {
 The `IExecutor` abstraction lets you swap the CLI backend for testing, mocking, or future SDK integration:
 
 ```typescript
-import { Claude, type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent } from 'claude-connector'
+import { Claude, type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent } from '@scottwalker/claude-connector'
 
 class MockExecutor implements IExecutor {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {

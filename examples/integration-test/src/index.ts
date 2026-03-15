@@ -10,7 +10,7 @@ import {
   type StreamEvent,
   type IExecutor,
   type ExecuteOptions,
-} from 'claude-connector';
+} from '@scottwalker/claude-connector';
 
 // ── 1. Verify types and constructor ─────────────────────────────
 

@@ -8,7 +8,7 @@
     "stream": "npx tsx src/chat-stream.ts"
   },
   "dependencies": {
-    "claude-connector": "file:../../"
+    "@scottwalker/claude-connector": "file:../../"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

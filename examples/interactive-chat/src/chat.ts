@@ -11,7 +11,7 @@
  *   npm start
  */
 import { createInterface } from 'node:readline';
-import { Claude, CliNotFoundError, ClaudeConnectorError } from 'claude-connector';
+import { Claude, CliNotFoundError, ClaudeConnectorError } from '@scottwalker/claude-connector';
 
 const rl = createInterface({
   input: process.stdin,

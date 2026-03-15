@@ -232,7 +232,7 @@ ClaudeConnectorError          Base class (catch-all)
 ### Adding a new executor (e.g., SDK-based)
 
 ```typescript
-import type { IExecutor } from 'claude-connector'
+import type { IExecutor } from '@scottwalker/claude-connector'
 
 class SdkExecutor implements IExecutor {
   async execute(args, options) { /* use SDK directly */ }

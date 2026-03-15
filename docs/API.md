@@ -244,7 +244,7 @@ All errors extend `ClaudeConnectorError`.
 | `ValidationError`    | Invalid options or prompt                    | `field`               |
 
 ```typescript
-import { ClaudeConnectorError, CliNotFoundError } from 'claude-connector'
+import { ClaudeConnectorError, CliNotFoundError } from '@scottwalker/claude-connector'
 
 try {
   await claude.query('...')
@@ -280,7 +280,7 @@ interface ExecuteOptions {
 ### Custom executor example
 
 ```typescript
-import { Claude, type IExecutor } from 'claude-connector'
+import { Claude, type IExecutor } from '@scottwalker/claude-connector'
 
 class MyExecutor implements IExecutor {
   async execute(args, options) { /* ... */ }
