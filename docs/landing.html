@@ -11,27 +11,27 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
-      --bg: #1b1000;
-      --bg-elevated: #1b1000;
-      --bg-card: #2a1e0e;
-      --bg-code: #1e1610;
-      --border: #3d2e18;
-      --border-highlight: #5c4525;
-      --border-comic: #1a1208;
-      --text: #faf3e8;
-      --text-secondary: #c4a882;
-      --text-muted: #8a7050;
-      --accent: #f59e0b;
-      --accent-bright: #fbbf24;
-      --accent-dim: #d97706;
-      --accent-deep: #b45309;
-      --accent-glow: rgba(245, 158, 11, 0.15);
-      --orange: #f97316;
-      --amber: #f59e0b;
-      --yellow: #eab308;
-      --red-autumn: #dc6843;
-      --brown: #92400e;
-      --cream: #fef3c7;
+      --bg: #272840;
+      --bg-elevated: #272840;
+      --bg-card: #1C1D32;
+      --bg-code: #141525;
+      --border: #31334F;
+      --border-highlight: #4A4C68;
+      --border-comic: #1C1D32;
+      --text: #EEEEF3;
+      --text-secondary: #AAACBF;
+      --text-muted: #5F6180;
+      --accent: #E8611A;
+      --accent-bright: #F07D3C;
+      --accent-dim: #C94E10;
+      --accent-deep: #B85A1A;
+      --accent-glow: rgba(232, 97, 26, 0.15);
+      --orange: #E8611A;
+      --amber: #F07D3C;
+      --yellow: #F0A030;
+      --red-autumn: #E74C3C;
+      --brown: #B85A1A;
+      --cream: #EEEEF3;
       --radius: 4px;
       --comic-border: 3px solid var(--border-comic);
       --shadow-comic: none;
@@ -65,7 +65,7 @@
     .comic-bg {
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+      background-image: radial-gradient(circle, rgba(232, 97, 26, 0.04) 1px, transparent 1px);
       background-size: 20px 20px;
       pointer-events: none;
       z-index: 0;
@@ -78,9 +78,9 @@
       pointer-events: none;
       z-index: 0;
     }
-    .glow-orb.orange { width: 600px; height: 600px; background: rgba(249, 115, 22, 0.12); top: -200px; left: 50%; transform: translateX(-50%); }
-    .glow-orb.amber { width: 400px; height: 400px; background: rgba(245, 158, 11, 0.08); top: 900px; right: -100px; }
-    .glow-orb.red { width: 500px; height: 500px; background: rgba(220, 104, 67, 0.06); top: 2400px; left: -150px; }
+    .glow-orb.orange { width: 600px; height: 600px; background: rgba(232, 97, 26, 0.12); top: -200px; left: 50%; transform: translateX(-50%); }
+    .glow-orb.amber { width: 400px; height: 400px; background: rgba(232, 97, 26, 0.08); top: 900px; right: -100px; }
+    .glow-orb.red { width: 500px; height: 500px; background: rgba(232, 97, 26, 0.06); top: 2400px; left: -150px; }
 
     .container {
       max-width: 1100px;
@@ -106,7 +106,7 @@
       right: 0;
       z-index: 100;
       padding: 12px 24px;
-      background: rgba(26, 18, 8, 0.92);
+      background: rgba(39, 40, 64, 0.92);
       backdrop-filter: blur(20px);
       border-bottom: 3px solid var(--border-comic);
     }
@@ -301,12 +301,12 @@
     pre::-webkit-scrollbar-track { background: transparent; }
     pre::-webkit-scrollbar-thumb { background: var(--border-highlight); border-radius: 3px; }
     pre::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
-    .kw { color: var(--orange); }
-    .str { color: var(--yellow); }
-    .fn { color: var(--accent-bright); }
-    .cm { color: var(--text-muted); }
-    .op { color: var(--text-secondary); }
-    .prop { color: var(--red-autumn); }
+    .kw { color: #E8611A; }
+    .str { color: #F07D3C; }
+    .fn { color: #34D278; }
+    .cm { color: #5F6180; }
+    .op { color: #8385A0; }
+    .prop { color: #AAACBF; }
 
     .section-label {
       font-family: 'Bangers', cursive;
@@ -358,10 +358,10 @@
       margin-bottom: 20px;
       border: 2px solid var(--border-comic);
     }
-    .feature-icon.orange { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
-    .feature-icon.amber { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
-    .feature-icon.yellow { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
-    .feature-icon.red { background: rgba(220, 104, 67, 0.15); color: var(--red-autumn); }
+    .feature-icon.orange { background: rgba(232, 97, 26, 0.15); color: var(--orange); }
+    .feature-icon.amber { background: rgba(240, 125, 60, 0.15); color: var(--amber); }
+    .feature-icon.yellow { background: rgba(240, 160, 48, 0.15); color: var(--yellow); }
+    .feature-icon.red { background: rgba(231, 76, 60, 0.15); color: var(--red-autumn); }
     .feature-card h3 {
       font-family: 'Bangers', cursive;
       font-size: 22px;
@@ -418,10 +418,10 @@
       margin-bottom: 16px;
       letter-spacing: 2px;
     }
-    .usecase.uc-orange .uc-number { color: rgba(249, 115, 22, 0.2); }
-    .usecase.uc-amber .uc-number { color: rgba(245, 158, 11, 0.2); }
-    .usecase.uc-yellow .uc-number { color: rgba(234, 179, 8, 0.2); }
-    .usecase.uc-red .uc-number { color: rgba(220, 104, 67, 0.2); }
+    .usecase.uc-orange .uc-number { color: rgba(232, 97, 26, 0.2); }
+    .usecase.uc-amber .uc-number { color: rgba(240, 125, 60, 0.2); }
+    .usecase.uc-yellow .uc-number { color: rgba(240, 160, 48, 0.2); }
+    .usecase.uc-red .uc-number { color: rgba(231, 76, 60, 0.2); }
     .usecase h3 {
       font-family: 'Bangers', cursive;
       font-size: 24px;
@@ -444,10 +444,10 @@
       letter-spacing: 1px;
       border: 2px solid var(--border-comic);
     }
-    .usecase.uc-orange .tag { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
-    .usecase.uc-amber .tag { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
-    .usecase.uc-yellow .tag { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
-    .usecase.uc-red .tag { background: rgba(220, 104, 67, 0.15); color: var(--red-autumn); }
+    .usecase.uc-orange .tag { background: rgba(232, 97, 26, 0.15); color: var(--orange); }
+    .usecase.uc-amber .tag { background: rgba(240, 125, 60, 0.15); color: var(--amber); }
+    .usecase.uc-yellow .tag { background: rgba(240, 160, 48, 0.15); color: var(--yellow); }
+    .usecase.uc-red .tag { background: rgba(231, 76, 60, 0.15); color: var(--red-autumn); }
 
     .arch-diagram {
       background: var(--bg-code);
@@ -498,7 +498,7 @@
       box-shadow: var(--shadow-comic);
     }
     .comp-card.before { background: var(--bg-card); }
-    .comp-card.after { background: linear-gradient(135deg, rgba(249,115,22,0.05), rgba(245,158,11,0.05)); border-color: var(--accent-dim); }
+    .comp-card.after { background: linear-gradient(135deg, rgba(232,97,26,0.05), rgba(240,125,60,0.05)); border-color: var(--accent-dim); }
     .comp-card h3 { font-family: 'Bangers', cursive; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
     .comp-card.before h3 { color: var(--text-muted); }
     .comp-card.after h3 { color: var(--accent-bright); }
@@ -564,7 +564,7 @@
     }
 
     .npm-banner {
-      background: linear-gradient(135deg, rgba(203,56,55,0.08), rgba(249,115,22,0.08));
+      background: linear-gradient(135deg, rgba(28,29,50,0.8), rgba(232,97,26,0.08));
       border: 2px solid var(--border-comic);
       box-shadow: var(--shadow-comic);
       padding: 32px 40px;
@@ -734,6 +734,7 @@
 <section class="hero">
   <div class="container">
     <div class="badge"><i data-lucide="sparkles" style="width:14px;height:14px"></i> Available on npm &mdash; v0.3.0</div>
+    <img src="assets/logo.png" alt="Claude Connector" style="width:220px;margin-bottom:20px;filter:drop-shadow(0 16px 48px rgba(232,97,26,0.2))">
     <h1>Claude Code<br><span class="gradient">In your code</span></h1>
     <p class="hero-sub">
       The entire power of Claude Code &mdash; reading files, editing code, running commands, browsing the web &mdash; available as a simple Node.js API. No terminal. No copy-paste. Just <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-code);padding:2px 10px;border:2px solid var(--border-comic);font-size:16px;color:var(--accent-bright)">import</code> and go.
