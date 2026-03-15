@@ -24,10 +24,10 @@
  *      │                                    ▲
  *      │                                    │
  *      ▼                              ┌─────┴──────┐
- * ┌─────────┐                         │CliExecutor  │  (default implementation)
- * │ Session │                         │ SdkExecutor │  (future)
- * │ Scheduler│                        │ HttpExecutor│  (future)
- * └─────────┘                         └────────────┘
+ * ┌─────────┐                         │CliExecutor  │
+ * │ Session │                         │ SdkExecutor │
+ * │ Scheduler│                        └────────────┘
+ * └─────────┘
  * ```
  *
  * @module
@@ -76,6 +76,11 @@ export {
   EVENT_ERROR,
   EVENT_SYSTEM,
 
+  // Task event types
+  EVENT_TASK_STARTED,
+  EVENT_TASK_PROGRESS,
+  EVENT_TASK_NOTIFICATION,
+
   // Permission modes
   PERMISSION_DEFAULT,
   PERMISSION_ACCEPT_EDITS,
@@ -117,10 +122,39 @@ export type {
   PermissionMode,
   EffortLevel,
   McpServerConfig,
+  McpSdkServerConfig,
   AgentConfig,
   HookEntry,
   HookMatcher,
   HooksConfig,
+  // Permission types
+  CanUseTool,
+  PermissionResult,
+  PermissionUpdate,
+  PermissionBehavior,
+  PermissionRuleValue,
+  PermissionUpdateDestination,
+  // Thinking types
+  ThinkingConfig,
+  ThinkingAdaptive,
+  ThinkingEnabled,
+  ThinkingDisabled,
+  // Hook callback types
+  HookEvent,
+  HookCallback,
+  HookCallbackMatcher,
+  HookInput,
+  HookJSONOutput,
+  SyncHookJSONOutput,
+  AsyncHookJSONOutput,
+  // Elicitation
+  OnElicitation,
+  ElicitationRequest,
+  SettingSource,
+  PluginConfig,
+  SpawnOptions,
+  SpawnedProcess,
+  // Result types
   QueryResult,
   StreamEvent,
   StreamTextEvent,
@@ -128,6 +162,19 @@ export type {
   StreamResultEvent,
   StreamErrorEvent,
   StreamSystemEvent,
+  // Task event types
+  StreamTaskStartedEvent,
+  StreamTaskProgressEvent,
+  StreamTaskNotificationEvent,
+  // Info types
+  AccountInfo,
+  ModelInfo,
+  SlashCommand,
+  AgentInfo,
+  McpServerStatus,
+  McpSetServersResult,
+  RewindFilesResult,
+  // Other
   TokenUsage,
   Message,
   ContentBlock,
@@ -137,3 +184,83 @@ export type {
   SessionOptions,
   SessionInfo,
 } from './types/index.js';
+
+// ── SDK Re-exports ────────────────────────────────────────────────
+// Lazy re-exports of SDK helpers for in-process MCP tools.
+// These will throw at import time if @anthropic-ai/claude-agent-sdk is not installed.
+
+/**
+ * Create an in-process MCP server for custom tools (SDK mode only).
+ *
+ * @example
+ * ```ts
+ * import { createSdkMcpServer, tool } from '@scottwalker/claude-connector'
+ * import { z } from 'zod/v4'
+ *
+ * const server = createSdkMcpServer({
+ *   name: 'my-tools',
+ *   tools: [
+ *     tool('getPrice', 'Get stock price', { ticker: z.string() },
+ *       async ({ ticker }) => ({ content: [{ type: 'text', text: '142.50' }] })
+ *     ),
+ *   ],
+ * })
+ *
+ * const claude = new Claude({ mcpServers: { prices: server } })
+ * ```
+ */
+export async function createSdkMcpServer(options: {
+  name: string;
+  version?: string;
+  tools?: Array<unknown>;
+}): Promise<import('./types/client.js').McpSdkServerConfig> {
+  const sdk = await import('@anthropic-ai/claude-agent-sdk');
+  return sdk.createSdkMcpServer(options as Parameters<typeof sdk.createSdkMcpServer>[0]) as unknown as import('./types/client.js').McpSdkServerConfig;
+}
+
+/**
+ * Define a custom MCP tool for use with `createSdkMcpServer()`.
+ *
+ * @example
+ * ```ts
+ * import { tool } from '@scottwalker/claude-connector'
+ * import { z } from 'zod/v4'
+ *
+ * const myTool = tool('greet', 'Say hello', { name: z.string() },
+ *   async ({ name }) => ({ content: [{ type: 'text', text: `Hello ${name}!` }] })
+ * )
+ * ```
+ */
+export async function sdkTool(
+  name: string,
+  description: string,
+  inputSchema: unknown,
+  handler: (args: unknown, extra: unknown) => Promise<unknown>,
+  extras?: { annotations?: Record<string, boolean> },
+): Promise<unknown> {
+  const sdk = await import('@anthropic-ai/claude-agent-sdk');
+  return sdk.tool(name, description, inputSchema as Parameters<typeof sdk.tool>[2], handler as Parameters<typeof sdk.tool>[3], extras as Parameters<typeof sdk.tool>[4]);
+}
+
+/**
+ * List existing sessions.
+ */
+export async function listSessions(options?: {
+  dir?: string;
+  limit?: number;
+  includeWorktrees?: boolean;
+}): Promise<Array<{ sessionId: string; summary: string; lastModified: number }>> {
+  const sdk = await import('@anthropic-ai/claude-agent-sdk');
+  return sdk.listSessions(options) as Promise<Array<{ sessionId: string; summary: string; lastModified: number }>>;
+}
+
+/**
+ * Get messages from an existing session.
+ */
+export async function getSessionMessages(
+  sessionId: string,
+  options?: { dir?: string; limit?: number; offset?: number },
+): Promise<Array<{ type: string; uuid: string; session_id: string; message: unknown }>> {
+  const sdk = await import('@anthropic-ai/claude-agent-sdk');
+  return sdk.getSessionMessages(sessionId, options) as Promise<Array<{ type: string; uuid: string; session_id: string; message: unknown }>>;
+}

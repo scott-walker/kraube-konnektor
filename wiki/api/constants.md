@@ -35,6 +35,26 @@ claude.stream('Analyze code')
   .done()
 ```
 
+## Task Event Types
+
+Constants for task lifecycle events. Emitted during background task execution in SDK mode.
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `EVENT_TASK_STARTED` | `'task_started'` | Task has been created and started |
+| `EVENT_TASK_PROGRESS` | `'task_progress'` | Incremental progress update from a running task |
+| `EVENT_TASK_NOTIFICATION` | `'task_notification'` | Notification from a task (e.g., completion, failure) |
+
+```typescript
+import { EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from '@scottwalker/claude-connector'
+
+claude.stream('Run background task')
+  .on(EVENT_TASK_STARTED, (event) => console.log(`Task ${event.taskId} started`))
+  .on(EVENT_TASK_PROGRESS, (event) => console.log(`Progress: ${event.message}`))
+  .on(EVENT_TASK_NOTIFICATION, (event) => console.log(`Notification: ${event.message}`))
+  .done()
+```
+
 ## Permission Modes
 
 Control how Claude handles tool approval. Used in [`ClientOptions.permissionMode`](./types#clientoptions) and [`QueryOptions.permissionMode`](./types#queryoptions).

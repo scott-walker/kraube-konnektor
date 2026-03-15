@@ -34,6 +34,9 @@ on(type: typeof EVENT_TOOL_USE, callback: (event: StreamToolUseEvent) => void): 
 on(type: typeof EVENT_RESULT, callback: (event: StreamResultEvent) => void): this
 on(type: typeof EVENT_ERROR, callback: (event: StreamErrorEvent) => void): this
 on(type: typeof EVENT_SYSTEM, callback: (event: StreamSystemEvent) => void): this
+on(type: typeof EVENT_TASK_STARTED, callback: (event: StreamTaskStartedEvent) => void): this
+on(type: typeof EVENT_TASK_PROGRESS, callback: (event: StreamTaskProgressEvent) => void): this
+on(type: typeof EVENT_TASK_NOTIFICATION, callback: (event: StreamTaskNotificationEvent) => void): this
 ```
 
 Register a callback for a specific event type. Returns `this` for chaining. Multiple callbacks per event type are supported.
@@ -78,8 +81,33 @@ const result = await claude.stream('Refactor auth module')
 | `'result'` | `EVENT_RESULT` | `(event: StreamResultEvent) => void` | Final result with usage, cost, duration |
 | `'error'` | `EVENT_ERROR` | `(event: StreamErrorEvent) => void` | Error with message and optional code |
 | `'system'` | `EVENT_SYSTEM` | `(event: StreamSystemEvent) => void` | System event with subtype and data |
+| `'task_started'` | `EVENT_TASK_STARTED` | `(event: StreamTaskStartedEvent) => void` | A subagent task has started (includes task ID and agent name) |
+| `'task_progress'` | `EVENT_TASK_PROGRESS` | `(event: StreamTaskProgressEvent) => void` | Progress update from a running subagent task |
+| `'task_notification'` | `EVENT_TASK_NOTIFICATION` | `(event: StreamTaskNotificationEvent) => void` | Notification from a subagent (completion, error, or status change) |
 
 See [StreamEvent types](./types#streamevent) for full event type definitions.
+
+#### Task Event Example
+
+```typescript
+import {
+  Claude,
+  EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+const result = await claude.stream('Run all agents on this codebase')
+  .on(EVENT_TASK_STARTED, (event) => {
+    console.log(`Task ${event.taskId} started (agent: ${event.agentName})`)
+  })
+  .on(EVENT_TASK_PROGRESS, (event) => {
+    console.log(`Task ${event.taskId}: ${event.message}`)
+  })
+  .on(EVENT_TASK_NOTIFICATION, (event) => {
+    console.log(`Task ${event.taskId} [${event.status}]: ${event.message}`)
+  })
+  .done()
+```
 
 ### done()
 

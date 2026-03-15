@@ -70,3 +70,83 @@ const claude = new Claude({
 ::: warning
 With `strictMcpConfig: true`, any MCP servers configured globally or in project settings are ignored. Only the servers you specify in `mcpConfig` and `mcpServers` are available.
 :::
+
+## In-Process MCP Tools
+
+Define custom tools that run inside your Node.js process using `createSdkMcpServer` and `sdkTool` (SDK mode only):
+
+```ts
+import { Claude, createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+import { z } from 'zod/v4'
+
+const server = await createSdkMcpServer({
+  name: 'my-tools',
+  tools: [
+    await sdkTool(
+      'getPrice',
+      'Get current stock price',
+      { ticker: z.string() },
+      async ({ ticker }) => ({
+        content: [{ type: 'text', text: `${ticker}: $142.50` }],
+      }),
+    ),
+    await sdkTool(
+      'getWeather',
+      'Get weather for a city',
+      { city: z.string() },
+      async ({ city }) => ({
+        content: [{ type: 'text', text: `${city}: 22°C, sunny` }],
+      }),
+      { annotations: { readOnly: true } },
+    ),
+  ],
+})
+
+const claude = new Claude({
+  mcpServers: { stocks: server },
+})
+
+const result = await claude.query('What is the price of AAPL?')
+```
+
+::: tip
+In-process MCP tools avoid external processes — the tool handler runs directly in your Node.js runtime. Ideal for integrating application-specific logic.
+:::
+
+## Dynamic MCP Management
+
+Add, remove, reconnect, and toggle MCP servers at runtime (SDK mode only):
+
+### `setMcpServers` — Add or Replace Servers
+
+```ts
+const claude = new Claude()
+
+const result = await claude.setMcpServers({
+  analytics: {
+    type: 'stdio',
+    command: 'mcp-analytics',
+    args: ['--verbose'],
+  },
+})
+
+console.log('Added:', result.added)     // ['analytics']
+console.log('Removed:', result.removed) // []
+console.log('Errors:', result.errors)   // {}
+```
+
+### `reconnectMcpServer` — Reconnect a Failed Server
+
+```ts
+await claude.reconnectMcpServer('analytics')
+```
+
+### `toggleMcpServer` — Enable or Disable a Server
+
+```ts
+// Disable a server (its tools become unavailable)
+await claude.toggleMcpServer('analytics', false)
+
+// Re-enable it
+await claude.toggleMcpServer('analytics', true)
+```

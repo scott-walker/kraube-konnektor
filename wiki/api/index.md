@@ -232,6 +232,116 @@ await claude.init()
 // All subsequent queries are fast
 ```
 
+## SDK Control Methods
+
+These methods are only available in SDK mode (`useSdk: true`, the default). They throw an error if called in CLI mode.
+
+### setModel()
+
+```typescript
+setModel(model?: string): Promise<void>
+```
+
+Change the active model for the current SDK session. If `model` is omitted, resets to the default.
+
+### setPermissionMode()
+
+```typescript
+setPermissionMode(mode: PermissionMode): Promise<void>
+```
+
+Change the permission mode for the current SDK session.
+
+### rewindFiles()
+
+```typescript
+rewindFiles(userMessageId: string, options?: RewindFilesOptions): Promise<RewindFilesResult>
+```
+
+Revert file changes back to the state at the given user message. Returns information about rewound files.
+
+### stopTask()
+
+```typescript
+stopTask(taskId: string): Promise<void>
+```
+
+Stop a running background task by its ID.
+
+### setMcpServers()
+
+```typescript
+setMcpServers(servers: McpServerConfig[]): Promise<McpSetServersResult>
+```
+
+Replace the current set of MCP servers with a new configuration.
+
+### reconnectMcpServer()
+
+```typescript
+reconnectMcpServer(serverName: string): Promise<void>
+```
+
+Reconnect a disconnected MCP server by name.
+
+### toggleMcpServer()
+
+```typescript
+toggleMcpServer(serverName: string, enabled: boolean): Promise<void>
+```
+
+Enable or disable an MCP server by name.
+
+### accountInfo()
+
+```typescript
+accountInfo(): Promise<AccountInfo>
+```
+
+Retrieve account information for the authenticated user.
+
+### supportedModels()
+
+```typescript
+supportedModels(): Promise<ModelInfo[]>
+```
+
+List all models available to the current account.
+
+### supportedCommands()
+
+```typescript
+supportedCommands(): Promise<SlashCommand[]>
+```
+
+List all slash commands recognized by the SDK session.
+
+### supportedAgents()
+
+```typescript
+supportedAgents(): Promise<AgentInfo[]>
+```
+
+List all available agents.
+
+### mcpServerStatus()
+
+```typescript
+mcpServerStatus(): Promise<McpServerStatus[]>
+```
+
+Get the connection status of all configured MCP servers.
+
+### interrupt()
+
+```typescript
+interrupt(): Promise<void>
+```
+
+Send an interrupt signal to the SDK session, cancelling the current operation.
+
+## Other Methods
+
 ### abort()
 
 ```typescript

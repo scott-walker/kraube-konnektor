@@ -5,3 +5,4 @@ dist/
 coverage/
 *.tgz
 examples/**/tmp/
+wiki/.vitepress/cache/

@@ -225,6 +225,61 @@ try {
 }
 ```
 
+## Task Events
+
+Track subagent lifecycle with `task_started`, `task_progress`, and `task_notification` events:
+
+```ts
+import {
+  Claude,
+  EVENT_TEXT,
+  EVENT_TASK_STARTED,
+  EVENT_TASK_PROGRESS,
+  EVENT_TASK_NOTIFICATION,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
+const result = await claude.stream('Refactor the entire src/ directory')
+  .on(EVENT_TEXT, (text) => process.stdout.write(text))
+  .on(EVENT_TASK_STARTED, (event) => {
+    console.log(`\n[Task started: ${event.description}] id=${event.taskId}`)
+  })
+  .on(EVENT_TASK_PROGRESS, (event) => {
+    console.log(`\n[Task ${event.taskId}] ${event.description}`)
+    console.log(`  Tokens: ${event.usage.totalTokens}, Tools: ${event.usage.toolUses}`)
+    if (event.summary) console.log(`  Summary: ${event.summary}`)
+  })
+  .on(EVENT_TASK_NOTIFICATION, (event) => {
+    console.log(`\n[Task ${event.taskId} ${event.status}] ${event.summary}`)
+  })
+  .done()
+```
+
+## Per-Query Abort with `signal`
+
+Cancel a specific stream without affecting other queries:
+
+```ts
+import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+const controller = new AbortController()
+
+// Abort after 15 seconds
+setTimeout(() => controller.abort(), 15_000)
+
+try {
+  const result = await claude.stream('Analyze the full codebase', {
+    signal: controller.signal,
+  })
+    .on(EVENT_TEXT, (t) => process.stdout.write(t))
+    .done()
+} catch (err) {
+  console.log('\nStream aborted')
+}
+```
+
 ## Parallel Streams
 
 Run multiple streams simultaneously:

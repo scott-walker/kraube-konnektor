@@ -110,10 +110,39 @@
   justify-content: center;
 }
 
+/* ── Focus outlines ── */
+*:focus, *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #31334F; }
+::-webkit-scrollbar-thumb:hover { background: #4A4C68; }
+
+.dark .vp-doc div[class*="language-"] pre::-webkit-scrollbar { height: 4px; }
+.dark .vp-doc div[class*="language-"] pre::-webkit-scrollbar-track { background: #141525; }
+.dark .vp-doc div[class*="language-"] pre::-webkit-scrollbar-thumb { background: #31334F; }
+.dark .vp-doc div[class*="language-"] pre::-webkit-scrollbar-thumb:hover { background: #4A4C68; }
+
+* { scrollbar-width: thin; scrollbar-color: #31334F transparent; }
+
+/* ── Nav logo spacing ── */
+.VPNavBarTitle .logo {
+  margin-right: 16px;
+}
+
+/* ── Code copy button icon color ── */
+.dark .vp-doc div[class*="language-"] button.copy::before {
+  filter: brightness(2);
+}
+
 /* ── Code blocks — brand colors ── */
 .dark .vp-doc div[class*="language-"] {
   background-color: #141525;
-  border: 1px solid #31334F;
+  border: none;
 }
 
 /* ── Sidebar active link ── */
@@ -121,7 +150,40 @@
   color: var(--vp-c-brand-1);
 }
 
-/* ── Custom block tips ── */
+/* ── Custom blocks ── */
 .dark .vp-doc .custom-block.tip {
-  border-color: var(--vp-c-brand-1);
+  border-color: #7B8CDE;
+  background-color: rgba(123, 140, 222, 0.08);
+}
+
+.dark .vp-doc .custom-block.tip .custom-block-title {
+  color: #7B8CDE;
+}
+
+.dark .vp-doc .custom-block.tip code {
+  background-color: rgba(123, 140, 222, 0.2);
+  color: #9BA8E8;
+}
+
+.dark .vp-doc .custom-block.warning {
+  border-color: #E8611A;
+  background-color: rgba(232, 97, 26, 0.08);
+}
+
+.dark .vp-doc .custom-block.warning .custom-block-title {
+  color: #F07D3C;
+}
+
+.dark .vp-doc .custom-block.warning code {
+  background-color: rgba(232, 97, 26, 0.2);
+  color: #F07D3C;
+}
+
+.dark .vp-doc .custom-block.danger {
+  border-color: #C94E10;
+  background-color: rgba(201, 78, 16, 0.08);
+}
+
+.dark .vp-doc .custom-block.danger .custom-block-title {
+  color: #E8611A;
 }

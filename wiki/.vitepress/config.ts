@@ -4,13 +4,14 @@ export default defineConfig({
   title: 'Claude Connector',
   description: 'Programmatic Node.js interface for Claude Code CLI',
   base: '/claude-connector/wiki/',
+  appearance: false,
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/claude-connector/wiki/favicon.svg' }],
   ],
 
   themeConfig: {
-    logo: '/favicon.svg',
+    logo: '/logo.png',
 
     nav: [
       { text: 'Home', link: '/' },

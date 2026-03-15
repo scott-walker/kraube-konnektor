@@ -68,6 +68,7 @@ interface ExecuteOptions {
   readonly env: Record<string, string>
   readonly input?: string
   readonly systemPrompt?: string
+  readonly signal?: AbortSignal
 }
 ```
 
@@ -77,6 +78,7 @@ interface ExecuteOptions {
 | `env` | `Record<string, string>` | Environment variables merged with `process.env` |
 | `input` | `string` | Data piped to stdin (like `echo "data" \| claude`) |
 | `systemPrompt` | `string` | System prompt (used by SDK executor; CLI executor ignores this as it's in args) |
+| `signal` | `AbortSignal` | Optional abort signal for cooperative cancellation |
 
 ## Contract
 
@@ -150,3 +152,35 @@ The package ships two executor implementations:
 | `CliExecutor` | `useSdk: false` | Spawns a new `claude -p` process per query. Stateless. |
 
 You do not need to import or instantiate these directly -- the `Claude` constructor selects the appropriate executor based on the `useSdk` option.
+
+### SdkExecutor Internals
+
+#### V1 API Migration
+
+`SdkExecutor` uses the stable V1 `query()` API from the Claude Agent SDK. Earlier versions relied on `unstable_v2_createSession` which had stability issues. The V1 API provides a simpler, more reliable interface with built-in session management.
+
+#### readUntilResult Pattern
+
+Internally, `SdkExecutor` uses a `readUntilResult` pattern when streaming. Instead of closing the async generator with `for await...of` (which can trigger premature cleanup), it manually calls `.next()` on the iterator until a result event is received. This ensures the SDK session stays alive for the full duration of the query:
+
+```typescript
+// Simplified internal pattern
+const iterator = conversation.query(prompt)[Symbol.asyncIterator]()
+while (true) {
+  const { done, value } = await iterator.next()
+  if (done) break
+  yield mapEvent(value)
+  if (isResult(value)) break
+}
+```
+
+#### Control Methods
+
+`SdkExecutor` exposes additional control methods beyond the `IExecutor` interface:
+
+| Method | Description |
+|--------|-------------|
+| `abort()` | Abort the current query via `AbortController` |
+| `stopTask(taskId)` | Stop a specific subagent task by ID |
+| `getRunningTasks()` | List currently running subagent tasks |
+| `isReady()` | Check if the executor is initialized and ready for queries |

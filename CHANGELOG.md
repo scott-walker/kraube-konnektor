@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-16
+
+### Added
+
+- **SDK near-parity** — 95% coverage of `@anthropic-ai/claude-agent-sdk` Options and Query API
+- **SdkExecutor V1 migration** — migrated from unstable V2 `SDKSession` to stable V1 `query()` API with full control methods
+- **`canUseTool` callback** — programmatic permission control with access to tool name, input arguments, suggestions, and abort signal
+- **In-process MCP tools** — `createSdkMcpServer()` and `sdkTool()` for custom tools without external processes (SDK type MCP servers)
+- **JS hook callbacks** — `hookCallbacks` option with all 21 event types (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Notification`, `UserPromptSubmit`, `SessionStart`, `SessionEnd`, `Stop`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PermissionRequest`, `Setup`, `TeammateIdle`, `TaskCompleted`, `Elicitation`, `ElicitationResult`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `InstructionsLoaded`)
+- **Thinking config** — `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens }`, `{ type: 'disabled' }` on `ClientOptions` and `QueryOptions`
+- **Runtime control methods** (SDK mode):
+  - `claude.setModel()` — change model mid-session
+  - `claude.setPermissionMode()` — change permission mode mid-session
+  - `claude.rewindFiles()` — rollback files to a specific message state (requires `enableFileCheckpointing`)
+  - `claude.stopTask()` — stop a running subagent
+  - `claude.setMcpServers()` — dynamically replace MCP servers
+  - `claude.reconnectMcpServer()` — reconnect a failed MCP server
+  - `claude.toggleMcpServer()` — enable/disable MCP server
+  - `claude.accountInfo()` — get account email, org, subscription
+  - `claude.supportedModels()` — list available models with capabilities
+  - `claude.supportedCommands()` — list slash commands
+  - `claude.supportedAgents()` — list available subagents
+  - `claude.mcpServerStatus()` — get MCP server connection statuses
+  - `claude.interrupt()` — interrupt current query execution
+- **Per-query abort** — `signal: AbortSignal` on `QueryOptions` (works in both SDK and CLI modes)
+- **Task stream events** — `task_started`, `task_progress`, `task_notification` for subagent lifecycle tracking
+- **StreamHandle task callbacks** — `.on('task_started', cb)`, `.on('task_progress', cb)`, `.on('task_notification', cb)`
+- **New ClientOptions**: `settingSources` (controls CLAUDE.md loading), `settings` (inline settings/path), `plugins` (local plugins), `spawnClaudeCodeProcess` (custom spawn for VMs/containers), `stderr` (stderr callback), `allowDangerouslySkipPermissions`, `betas`, `agentProgressSummaries`, `includePartialMessages`, `promptSuggestions`, `debug`, `debugFile`, `onElicitation`, `enableFileCheckpointing`
+- **Session utilities** — `listSessions()` and `getSessionMessages()` re-exported from SDK
+- **New types** — `CanUseTool`, `PermissionResult`, `PermissionUpdate`, `ThinkingConfig`, `HookEvent`, `HookCallback`, `HookCallbackMatcher`, `AccountInfo`, `ModelInfo`, `AgentInfo`, `McpServerStatus`, `McpSetServersResult`, `RewindFilesResult`, `McpSdkServerConfig`, `SettingSource`, `PluginConfig`, `SpawnOptions`, `SpawnedProcess`, `OnElicitation`, `ElicitationRequest`
+- **New constants** — `EVENT_TASK_STARTED`, `EVENT_TASK_PROGRESS`, `EVENT_TASK_NOTIFICATION`
+- 78 new tests (200 total, 12 test files)
+
+### Changed
+
+- **SdkExecutor uses V1 `query()` API** — instead of V2 `unstable_v2_createSession()`. Session stays warm (single process), multi-turn via `InputController` (controllable async iterable). All control methods delegate to the `Query` object.
+- **Manual `.next()` iteration** — replaced `for await ... break` with `readUntilResult()` helper to prevent generator closure on break (critical for session reuse)
+- `ExecuteOptions` now includes optional `signal: AbortSignal`
+- `StreamEvent` union expanded with `StreamTaskStartedEvent`, `StreamTaskProgressEvent`, `StreamTaskNotificationEvent`
+- `McpServerConfig` accepts SDK in-process servers (`type: 'sdk'`)
+- Landing page moved from `docs/` to `landing/` (clean separation from documentation)
+
 ## [0.3.0] - 2026-03-15
 
 ### Added

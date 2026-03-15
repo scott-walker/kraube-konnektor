@@ -78,6 +78,12 @@ export const MCP_SSE = 'sse' as const;
 
 export const CHAT_USER_MESSAGE = 'user_message' as const;
 
+// ── Task Event Types ────────────────────────────────────────────────
+
+export const EVENT_TASK_STARTED = 'task_started' as const;
+export const EVENT_TASK_PROGRESS = 'task_progress' as const;
+export const EVENT_TASK_NOTIFICATION = 'task_notification' as const;
+
 // ── System Event Subtypes ───────────────────────────────────────────
 
 export const SYSTEM_STDERR = 'stderr' as const;

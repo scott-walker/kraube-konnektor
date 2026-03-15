@@ -74,4 +74,10 @@ export interface ExecuteOptions {
    * SDK executor uses it to override/prepend system instructions.
    */
   readonly systemPrompt?: string;
+
+  /**
+   * AbortSignal for cancelling this specific execution.
+   * When signaled, the executor should terminate the running query.
+   */
+  readonly signal?: AbortSignal;
 }

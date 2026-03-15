@@ -61,6 +61,20 @@ export class CliExecutor implements IExecutor {
     const child = this.spawnProcess(args, options);
     this.activeProcess = child;
 
+    // Wire AbortSignal for per-query cancellation
+    if (options.signal) {
+      if (options.signal.aborted) {
+        child.kill(SIGNAL_SIGTERM);
+        this.activeProcess = null;
+        return;
+      }
+      options.signal.addEventListener('abort', () => {
+        if (!child.killed) {
+          child.kill(SIGNAL_SIGTERM);
+        }
+      }, { once: true });
+    }
+
     try {
       yield* this.readStream(child);
     } finally {
@@ -108,6 +122,21 @@ export class CliExecutor implements IExecutor {
     return new Promise((resolve, reject) => {
       const child = this.spawnProcess(args, options);
       this.activeProcess = child;
+
+      // Wire AbortSignal to kill the process
+      if (options.signal) {
+        if (options.signal.aborted) {
+          child.kill(SIGNAL_SIGTERM);
+          this.activeProcess = null;
+          reject(new Error('Query aborted'));
+          return;
+        }
+        options.signal.addEventListener('abort', () => {
+          if (!child.killed) {
+            child.kill(SIGNAL_SIGTERM);
+          }
+        }, { once: true });
+      }
 
       const chunks: Buffer[] = [];
       const errChunks: Buffer[] = [];

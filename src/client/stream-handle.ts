@@ -5,6 +5,9 @@ import {
   EVENT_RESULT,
   EVENT_ERROR,
   EVENT_SYSTEM,
+  EVENT_TASK_STARTED,
+  EVENT_TASK_PROGRESS,
+  EVENT_TASK_NOTIFICATION,
 } from '../constants.js';
 import type {
   StreamEvent,
@@ -12,6 +15,9 @@ import type {
   StreamResultEvent,
   StreamErrorEvent,
   StreamSystemEvent,
+  StreamTaskStartedEvent,
+  StreamTaskProgressEvent,
+  StreamTaskNotificationEvent,
 } from '../types/index.js';
 
 type TextCallback = (text: string) => void;
@@ -19,6 +25,9 @@ type ToolUseCallback = (event: StreamToolUseEvent) => void;
 type ResultCallback = (event: StreamResultEvent) => void;
 type ErrorCallback = (event: StreamErrorEvent) => void;
 type SystemCallback = (event: StreamSystemEvent) => void;
+type TaskStartedCallback = (event: StreamTaskStartedEvent) => void;
+type TaskProgressCallback = (event: StreamTaskProgressEvent) => void;
+type TaskNotificationCallback = (event: StreamTaskNotificationEvent) => void;
 
 /**
  * A streaming response handle with fluent callback API and Node.js stream support.
@@ -29,6 +38,7 @@ type SystemCallback = (event: StreamSystemEvent) => void;
  * await claude.stream('Refactor auth')
  *   .on('text', (text) => process.stdout.write(text))
  *   .on('tool_use', (event) => console.log(event.toolName))
+ *   .on('task_started', (event) => console.log(`Task: ${event.description}`))
  *   .done()
  * ```
  *
@@ -59,6 +69,9 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
   private readonly resultCallbacks: ResultCallback[] = [];
   private readonly errorCallbacks: ErrorCallback[] = [];
   private readonly systemCallbacks: SystemCallback[] = [];
+  private readonly taskStartedCallbacks: TaskStartedCallback[] = [];
+  private readonly taskProgressCallbacks: TaskProgressCallback[] = [];
+  private readonly taskNotificationCallbacks: TaskNotificationCallback[] = [];
 
   constructor(source: () => AsyncIterable<StreamEvent>) {
     this.source = source;
@@ -74,6 +87,9 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
   on(type: typeof EVENT_RESULT, callback: ResultCallback): this;
   on(type: typeof EVENT_ERROR, callback: ErrorCallback): this;
   on(type: typeof EVENT_SYSTEM, callback: SystemCallback): this;
+  on(type: typeof EVENT_TASK_STARTED, callback: TaskStartedCallback): this;
+  on(type: typeof EVENT_TASK_PROGRESS, callback: TaskProgressCallback): this;
+  on(type: typeof EVENT_TASK_NOTIFICATION, callback: TaskNotificationCallback): this;
   on(type: string, callback: (...args: never[]) => void): this {
     switch (type) {
       case EVENT_TEXT: this.textCallbacks.push(callback as TextCallback); break;
@@ -81,6 +97,9 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
       case EVENT_RESULT: this.resultCallbacks.push(callback as ResultCallback); break;
       case EVENT_ERROR: this.errorCallbacks.push(callback as ErrorCallback); break;
       case EVENT_SYSTEM: this.systemCallbacks.push(callback as SystemCallback); break;
+      case EVENT_TASK_STARTED: this.taskStartedCallbacks.push(callback as TaskStartedCallback); break;
+      case EVENT_TASK_PROGRESS: this.taskProgressCallbacks.push(callback as TaskProgressCallback); break;
+      case EVENT_TASK_NOTIFICATION: this.taskNotificationCallbacks.push(callback as TaskNotificationCallback); break;
     }
     return this;
   }
@@ -131,16 +150,6 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
   /**
    * Get a Node.js Readable that emits text chunks.
    * Use for `pipeline()`, standard `.pipe()` chaining, HTTP responses, etc.
-   *
-   * ```ts
-   * claude.stream('Generate').toReadable().pipe(res)
-   *
-   * await pipeline(
-   *   claude.stream('Report').toReadable(),
-   *   createGzip(),
-   *   createWriteStream('report.gz'),
-   * )
-   * ```
    */
   toReadable(): Readable {
     const source = this.source;
@@ -175,6 +184,15 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
         break;
       case EVENT_SYSTEM:
         for (const cb of this.systemCallbacks) cb(event);
+        break;
+      case EVENT_TASK_STARTED:
+        for (const cb of this.taskStartedCallbacks) cb(event);
+        break;
+      case EVENT_TASK_PROGRESS:
+        for (const cb of this.taskProgressCallbacks) cb(event);
+        break;
+      case EVENT_TASK_NOTIFICATION:
+        for (const cb of this.taskNotificationCallbacks) cb(event);
         break;
     }
   }

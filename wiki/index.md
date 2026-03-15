@@ -6,7 +6,7 @@ hero:
   text: Claude Code in your code
   tagline: Programmatic Node.js interface for Claude Code CLI. Streaming, sessions, Node.js pipes — all typed.
   image:
-    src: /favicon.svg
+    src: /logo.png
     alt: Claude Connector
   actions:
     - theme: brand

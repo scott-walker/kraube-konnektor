@@ -1,4 +1,9 @@
-import type { ClientOptions, QueryOptions, QueryResult, StreamEvent } from '../types/index.js';
+import type {
+  ClientOptions, QueryOptions, QueryResult, StreamEvent,
+  AccountInfo, ModelInfo, SlashCommand, AgentInfo,
+  McpServerStatus, McpSetServersResult, RewindFilesResult,
+  McpServerConfig, McpSdkServerConfig, PermissionMode,
+} from '../types/index.js';
 import type { SessionOptions } from '../types/session.js';
 import type { IExecutor } from '../executor/interface.js';
 import { CliExecutor } from '../executor/cli-executor.js';
@@ -55,6 +60,7 @@ export class Claude {
       const sdkOpts: SdkExecutorOptions = {
         model: options.model,
         pathToClaudeCodeExecutable: options.executable,
+        cwd: options.cwd,
         permissionMode: options.permissionMode,
         allowedTools: options.allowedTools ? [...options.allowedTools] : undefined,
         disallowedTools: options.disallowedTools ? [...options.disallowedTools] : undefined,
@@ -62,6 +68,35 @@ export class Claude {
         systemPrompt: options.systemPrompt,
         appendSystemPrompt: options.appendSystemPrompt,
         maxTurns: options.maxTurns,
+        maxBudget: options.maxBudget,
+        effortLevel: options.effortLevel,
+        fallbackModel: options.fallbackModel,
+        // New SDK-level options
+        canUseTool: options.canUseTool,
+        thinking: options.thinking,
+        enableFileCheckpointing: options.enableFileCheckpointing,
+        onElicitation: options.onElicitation,
+        hookCallbacks: options.hookCallbacks,
+        mcpServers: options.mcpServers,
+        agents: options.agents,
+        agent: options.agent,
+        tools: options.tools ? [...options.tools] : undefined,
+        additionalDirs: options.additionalDirs ? [...options.additionalDirs] : undefined,
+        noSessionPersistence: options.noSessionPersistence,
+        strictMcpConfig: options.strictMcpConfig,
+        betas: options.betas ? [...options.betas] : undefined,
+        includePartialMessages: options.includePartialMessages,
+        promptSuggestions: options.promptSuggestions,
+        agentProgressSummaries: options.agentProgressSummaries,
+        debug: options.debug,
+        debugFile: options.debugFile,
+        // New passthrough options
+        stderr: options.stderr,
+        allowDangerouslySkipPermissions: options.allowDangerouslySkipPermissions,
+        settingSources: options.settingSources,
+        settings: options.settings,
+        plugins: options.plugins,
+        spawnClaudeCodeProcess: options.spawnClaudeCodeProcess as ((options: unknown) => unknown) | undefined,
       };
       this.sdkExecutor = new SdkExecutor(sdkOpts);
       this.executor = this.sdkExecutor;
@@ -119,6 +154,7 @@ export class Claude {
       env,
       input: options?.input,
       systemPrompt: resolved.systemPrompt,
+      signal: options?.signal,
     });
   }
 
@@ -126,23 +162,6 @@ export class Claude {
    * Execute a query with streaming response.
    * Returns a {@link StreamHandle} with fluent callbacks, Node.js stream support,
    * and backward-compatible async iteration.
-   *
-   * ```ts
-   * // Fluent
-   * await claude.stream('Fix bugs').on('text', t => process.stdout.write(t)).done()
-   *
-   * // Collect text
-   * const text = await claude.stream('Summarize').text()
-   *
-   * // Pipe
-   * const result = await claude.stream('Explain').pipe(process.stdout)
-   *
-   * // Node.js Readable
-   * claude.stream('Generate').toReadable().pipe(createWriteStream('out.txt'))
-   *
-   * // Raw iteration (backward compat)
-   * for await (const event of claude.stream('Analyze')) { ... }
-   * ```
    */
   stream(prompt: string, options?: QueryOptions): StreamHandle {
     validatePrompt(prompt);
@@ -161,6 +180,7 @@ export class Claude {
       env,
       input: options?.input,
       systemPrompt: resolved.systemPrompt,
+      signal: options?.signal,
     };
 
     return new StreamHandle(() => executor.stream(args, execOpts));
@@ -169,15 +189,6 @@ export class Claude {
   /**
    * Open a bidirectional chat — a persistent CLI process for real-time conversation.
    * Uses `--input-format stream-json` for multi-turn dialogue over a single process.
-   *
-   * ```ts
-   * const chat = claude.chat()
-   *   .on('text', (t) => process.stdout.write(t))
-   *
-   * await chat.send('What files are in src?')
-   * await chat.send('Now fix the bugs')
-   * chat.end()
-   * ```
    */
   chat(options?: QueryOptions): ChatHandle {
     if (options) validateQueryOptions(options);
@@ -250,5 +261,133 @@ export class Claude {
    */
   getExecutor(): IExecutor {
     return this.executor;
+  }
+
+  // ── SDK Control Methods ─────────────────────────────────────────
+  // These methods delegate to the underlying SdkExecutor.
+  // In CLI mode they throw an error.
+
+  /**
+   * Change the model for subsequent responses.
+   * SDK mode only — throws in CLI mode.
+   */
+  async setModel(model?: string): Promise<void> {
+    this.requireSdk('setModel');
+    await this.sdkExecutor!.setModel(model);
+  }
+
+  /**
+   * Change the permission mode for the session.
+   * SDK mode only — throws in CLI mode.
+   */
+  async setPermissionMode(mode: PermissionMode): Promise<void> {
+    this.requireSdk('setPermissionMode');
+    await this.sdkExecutor!.setPermissionMode(mode);
+  }
+
+  /**
+   * Rewind files to their state at a specific user message.
+   * Requires `enableFileCheckpointing: true`.
+   * SDK mode only — throws in CLI mode.
+   */
+  async rewindFiles(userMessageId: string, options?: { dryRun?: boolean }): Promise<RewindFilesResult> {
+    this.requireSdk('rewindFiles');
+    return this.sdkExecutor!.rewindFiles(userMessageId, options);
+  }
+
+  /**
+   * Stop a running subagent task.
+   * SDK mode only — throws in CLI mode.
+   */
+  async stopTask(taskId: string): Promise<void> {
+    this.requireSdk('stopTask');
+    await this.sdkExecutor!.stopTask(taskId);
+  }
+
+  /**
+   * Dynamically set MCP servers for this session.
+   * SDK mode only — throws in CLI mode.
+   */
+  async setMcpServers(servers: Record<string, McpServerConfig | McpSdkServerConfig>): Promise<McpSetServersResult> {
+    this.requireSdk('setMcpServers');
+    return this.sdkExecutor!.setMcpServers(servers);
+  }
+
+  /**
+   * Reconnect a disconnected MCP server.
+   * SDK mode only — throws in CLI mode.
+   */
+  async reconnectMcpServer(serverName: string): Promise<void> {
+    this.requireSdk('reconnectMcpServer');
+    await this.sdkExecutor!.reconnectMcpServer(serverName);
+  }
+
+  /**
+   * Enable or disable an MCP server.
+   * SDK mode only — throws in CLI mode.
+   */
+  async toggleMcpServer(serverName: string, enabled: boolean): Promise<void> {
+    this.requireSdk('toggleMcpServer');
+    await this.sdkExecutor!.toggleMcpServer(serverName, enabled);
+  }
+
+  /**
+   * Get account information (email, org, subscription).
+   * SDK mode only — throws in CLI mode.
+   */
+  async accountInfo(): Promise<AccountInfo> {
+    this.requireSdk('accountInfo');
+    return this.sdkExecutor!.accountInfo();
+  }
+
+  /**
+   * Get available models with their capabilities.
+   * SDK mode only — throws in CLI mode.
+   */
+  async supportedModels(): Promise<ModelInfo[]> {
+    this.requireSdk('supportedModels');
+    return this.sdkExecutor!.supportedModels();
+  }
+
+  /**
+   * Get available slash commands.
+   * SDK mode only — throws in CLI mode.
+   */
+  async supportedCommands(): Promise<SlashCommand[]> {
+    this.requireSdk('supportedCommands');
+    return this.sdkExecutor!.supportedCommands();
+  }
+
+  /**
+   * Get available subagents.
+   * SDK mode only — throws in CLI mode.
+   */
+  async supportedAgents(): Promise<AgentInfo[]> {
+    this.requireSdk('supportedAgents');
+    return this.sdkExecutor!.supportedAgents();
+  }
+
+  /**
+   * Get MCP server connection statuses.
+   * SDK mode only — throws in CLI mode.
+   */
+  async mcpServerStatus(): Promise<McpServerStatus[]> {
+    this.requireSdk('mcpServerStatus');
+    return this.sdkExecutor!.mcpServerStatus();
+  }
+
+  /**
+   * Interrupt the current query execution.
+   * SDK mode only — throws in CLI mode.
+   */
+  async interrupt(): Promise<void> {
+    this.requireSdk('interrupt');
+    await this.sdkExecutor!.interrupt();
+  }
+
+  private requireSdk(method: string): void {
+    if (!this.sdkExecutor) {
+      throw new Error(`${method}() is only available in SDK mode. Set useSdk: true (default) to use this method.`);
+    }
   }
 }

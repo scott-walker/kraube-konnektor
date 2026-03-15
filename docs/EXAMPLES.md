@@ -42,6 +42,21 @@ import { Claude } from '@scottwalker/claude-connector'
 - [Error Handling](#error-handling)
 - [QueryResult Fields](#queryresult-fields)
 - [Stream Events](#stream-events)
+- [Thinking Config](#thinking-config)
+- [Programmatic Permissions (canUseTool)](#programmatic-permissions-canusetool)
+- [In-Process MCP Tools](#in-process-mcp-tools)
+- [JS Hook Callbacks](#js-hook-callbacks)
+- [Runtime Model & Permission Switch](#runtime-model--permission-switch)
+- [Dynamic MCP](#dynamic-mcp)
+- [File Checkpointing](#file-checkpointing)
+- [Account & Model Info](#account--model-info)
+- [Per-Query Abort (signal)](#per-query-abort-signal)
+- [Subagent Control](#subagent-control)
+- [Settings & Plugins](#settings--plugins)
+- [Custom Process Spawn](#custom-process-spawn)
+- [Session Utilities](#session-utilities)
+- [Stderr Monitoring](#stderr-monitoring)
+- [Bypass Permissions](#bypass-permissions)
 - [Advanced: Custom Executor](#advanced-custom-executor)
 
 ---
@@ -1184,6 +1199,251 @@ Full reference for the discriminated union yielded by `stream()`.
 | `result` | `text`, `sessionId`, `usage`, `cost`, `durationMs` | Final result (always last) |
 | `error` | `message`, `code?` | Error during execution |
 | `system` | `subtype`, `data` | System/internal events |
+
+---
+
+## Thinking Config
+
+Control Claude's extended thinking behavior.
+
+```ts
+// Adaptive thinking (Claude decides when to think deeply)
+const claude = new Claude({ thinking: { type: 'adaptive' } })
+
+// Per-query override with explicit budget
+await claude.query('Complex analysis', {
+  thinking: { type: 'enabled', budgetTokens: 10000 },
+})
+```
+
+---
+
+## Programmatic Permissions (canUseTool)
+
+Intercept tool calls at runtime and allow/deny them programmatically.
+
+```ts
+const claude = new Claude({
+  canUseTool: async (toolName, input, { signal }) => {
+    if (toolName === 'Bash' && String(input.command).includes('rm'))
+      return { behavior: 'deny', message: 'Destructive commands blocked' }
+    return { behavior: 'allow' }
+  },
+})
+```
+
+---
+
+## In-Process MCP Tools
+
+Define MCP tools directly in JavaScript — no external server process required.
+
+```ts
+import { createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+import { z } from 'zod/v4'
+
+const server = await createSdkMcpServer({
+  name: 'my-tools',
+  tools: [
+    await sdkTool('getPrice', 'Get stock price', { ticker: z.string() },
+      async ({ ticker }) => ({ content: [{ type: 'text', text: '142.50' }] })
+    ),
+  ],
+})
+
+const claude = new Claude({ mcpServers: { prices: server } })
+```
+
+---
+
+## JS Hook Callbacks
+
+Programmatic hooks that run JavaScript functions instead of shell commands. Supports 21 event types.
+
+```ts
+const claude = new Claude({
+  hookCallbacks: {
+    PreToolUse: [{
+      matcher: 'Bash',
+      hooks: [async (input) => {
+        console.log('About to run:', input.tool_input)
+        return { continue: true }
+      }],
+    }],
+    SessionStart: [{
+      hooks: [async (input) => {
+        console.log('Session started:', input.session_id)
+        return {}
+      }],
+    }],
+  },
+})
+```
+
+---
+
+## Runtime Model & Permission Switch
+
+Change model or permission mode on a live instance without recreating it.
+
+```ts
+const claude = new Claude({ model: 'sonnet' })
+
+await claude.setModel('opus')
+await claude.setPermissionMode('plan')
+```
+
+---
+
+## Dynamic MCP
+
+Add, reconnect, or toggle MCP servers at runtime.
+
+```ts
+const claude = new Claude()
+
+// Replace all MCP servers
+await claude.setMcpServers({ 'new-server': { command: 'node', args: ['srv.js'] } })
+
+// Reconnect a specific server
+await claude.reconnectMcpServer('github')
+
+// Disable a server without removing it
+await claude.toggleMcpServer('github', false)
+```
+
+---
+
+## File Checkpointing
+
+Track and revert file changes made during a session.
+
+```ts
+const claude = new Claude({ enableFileCheckpointing: true })
+
+await claude.query('Refactor auth.ts')
+
+// Preview what would be reverted
+const result = await claude.rewindFiles('msg-uuid-123', { dryRun: true })
+// result: { canRewind: true, filesChanged: ['auth.ts'], insertions: 5, deletions: 2 }
+
+// Actually revert the changes
+await claude.rewindFiles('msg-uuid-123')
+```
+
+---
+
+## Account & Model Info
+
+Query account details, available models, agents, and MCP server status.
+
+```ts
+const claude = new Claude()
+
+const account = await claude.accountInfo()
+const models = await claude.supportedModels()
+const agents = await claude.supportedAgents()
+const mcpStatus = await claude.mcpServerStatus()
+```
+
+---
+
+## Per-Query Abort (signal)
+
+Pass an `AbortSignal` to cancel a specific query without affecting the instance.
+
+```ts
+const controller = new AbortController()
+setTimeout(() => controller.abort(), 30_000)
+
+const result = await claude.query('Long task', { signal: controller.signal })
+```
+
+---
+
+## Subagent Control
+
+Monitor and control subagent (spawned task) lifecycle via stream events.
+
+```ts
+await claude.stream('Analyze and fix')
+  .on('task_started', (e) => console.log(`Subagent started: ${e.description}`))
+  .on('task_progress', (e) => console.log(`Progress: ${e.description}`))
+  .on('task_notification', (e) => {
+    if (e.status === 'completed') console.log(`Done: ${e.summary}`)
+    if (e.status === 'failed') console.error(`Failed: ${e.summary}`)
+  })
+  .done()
+
+// Stop a running subagent by ID
+await claude.stopTask('task-42')
+```
+
+---
+
+## Settings & Plugins
+
+Load settings from CLAUDE.md files and attach local plugins.
+
+```ts
+const claude = new Claude({
+  settingSources: ['user', 'project'], // load CLAUDE.md!
+  settings: { permissions: { allow: ['Bash(npm test)'] } },
+  plugins: [{ type: 'local', path: './my-plugin' }],
+})
+```
+
+---
+
+## Custom Process Spawn
+
+Override how the Claude CLI process is spawned — useful for VMs, containers, or remote execution.
+
+```ts
+const claude = new Claude({
+  spawnClaudeCodeProcess: (opts) => {
+    return docker.exec('claude-container', opts.command, opts.args)
+  },
+})
+```
+
+---
+
+## Session Utilities
+
+List and inspect sessions programmatically.
+
+```ts
+import { listSessions, getSessionMessages } from '@scottwalker/claude-connector'
+
+const sessions = await listSessions({ dir: '/my/project' })
+const messages = await getSessionMessages(sessions[0].sessionId)
+```
+
+---
+
+## Stderr Monitoring
+
+Capture stderr output from the Claude process for logging or debugging.
+
+```ts
+const claude = new Claude({
+  stderr: (data) => logger.warn('[claude]', data),
+})
+```
+
+---
+
+## Bypass Permissions
+
+Skip all permission checks entirely. Requires an explicit safety flag.
+
+```ts
+const claude = new Claude({
+  permissionMode: 'bypassPermissions',
+  allowDangerouslySkipPermissions: true,
+})
+```
 
 ---
 

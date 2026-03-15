@@ -40,7 +40,10 @@ export type StreamEvent =
   | StreamToolUseEvent
   | StreamResultEvent
   | StreamErrorEvent
-  | StreamSystemEvent;
+  | StreamSystemEvent
+  | StreamTaskStartedEvent
+  | StreamTaskProgressEvent
+  | StreamTaskNotificationEvent;
 
 export interface StreamTextEvent {
   readonly type: 'text';
@@ -97,6 +100,147 @@ export interface StreamSystemEvent {
   /** Event-specific data. */
   readonly data: Record<string, unknown>;
 }
+
+// ── Task events (subagent lifecycle) ──────────────────────────────
+
+export interface StreamTaskStartedEvent {
+  readonly type: 'task_started';
+
+  /** Unique task ID for tracking and control. */
+  readonly taskId: string;
+
+  /** Tool use ID that spawned this task. */
+  readonly toolUseId?: string;
+
+  /** Description of the task. */
+  readonly description: string;
+
+  /** Task type (e.g. agent type name). */
+  readonly taskType?: string;
+
+  /** The prompt given to the subagent. */
+  readonly prompt?: string;
+}
+
+export interface StreamTaskProgressEvent {
+  readonly type: 'task_progress';
+
+  /** Task ID. */
+  readonly taskId: string;
+
+  /** Tool use ID. */
+  readonly toolUseId?: string;
+
+  /** Description of current progress. */
+  readonly description: string;
+
+  /** Resource usage so far. */
+  readonly usage: {
+    totalTokens: number;
+    toolUses: number;
+    durationMs: number;
+  };
+
+  /** Last tool used. */
+  readonly lastToolName?: string;
+
+  /** AI-generated progress summary (if agentProgressSummaries enabled). */
+  readonly summary?: string;
+}
+
+export interface StreamTaskNotificationEvent {
+  readonly type: 'task_notification';
+
+  /** Task ID. */
+  readonly taskId: string;
+
+  /** Tool use ID. */
+  readonly toolUseId?: string;
+
+  /** Task completion status. */
+  readonly status: 'completed' | 'failed' | 'stopped';
+
+  /** Path to the task output file. */
+  readonly outputFile: string;
+
+  /** Summary of what the task accomplished. */
+  readonly summary: string;
+
+  /** Resource usage. */
+  readonly usage?: {
+    totalTokens: number;
+    toolUses: number;
+    durationMs: number;
+  };
+}
+
+// ── Info types (from control methods) ─────────────────────────────
+
+/** Information about the logged-in user's account. */
+export interface AccountInfo {
+  email?: string;
+  organization?: string;
+  subscriptionType?: string;
+  tokenSource?: string;
+  apiKeySource?: string;
+}
+
+/** Information about an available model. */
+export interface ModelInfo {
+  value: string;
+  displayName: string;
+  description: string;
+  supportsEffort?: boolean;
+  supportedEffortLevels?: ('low' | 'medium' | 'high' | 'max')[];
+  supportsAdaptiveThinking?: boolean;
+  supportsFastMode?: boolean;
+  supportsAutoMode?: boolean;
+}
+
+/** Available slash command. */
+export interface SlashCommand {
+  [key: string]: unknown;
+}
+
+/** Information about an available subagent. */
+export interface AgentInfo {
+  name: string;
+  description: string;
+  model?: string;
+}
+
+/** Status of an MCP server connection. */
+export interface McpServerStatus {
+  name: string;
+  status: 'connected' | 'failed' | 'needs-auth' | 'pending' | 'disabled';
+  serverInfo?: { name: string; version: string };
+  error?: string;
+  config?: Record<string, unknown>;
+  scope?: string;
+  tools?: Array<{
+    name: string;
+    description?: string;
+    annotations?: { readOnly?: boolean; destructive?: boolean; openWorld?: boolean };
+  }>;
+}
+
+/** Result of a setMcpServers operation. */
+export interface McpSetServersResult {
+  added: string[];
+  removed: string[];
+  errors: Record<string, string>;
+}
+
+/** Result of a rewindFiles operation. */
+export interface RewindFilesResult {
+  canRewind: boolean;
+  error?: string;
+  filesChanged?: string[];
+  insertions?: number;
+  deletions?: number;
+}
+
+// ── Token usage ───────────────────────────────────────────────────
 
 export interface TokenUsage {
   readonly inputTokens: number;

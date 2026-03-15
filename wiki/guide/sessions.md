@@ -132,3 +132,71 @@ const promise = session.query('Long analysis...')
 
 setTimeout(() => session.abort(), 5_000)
 ```
+
+## Session Utilities
+
+List existing sessions and retrieve message history (SDK mode only):
+
+### `listSessions` — Browse Past Sessions
+
+```ts
+import { listSessions } from '@scottwalker/claude-connector'
+
+const sessions = await listSessions({
+  dir: '/home/user/project',
+  limit: 10,
+  includeWorktrees: false,
+})
+
+for (const s of sessions) {
+  console.log(`${s.sessionId} — ${s.summary}`)
+  console.log(`  Last modified: ${new Date(s.lastModified).toLocaleString()}`)
+}
+```
+
+### `getSessionMessages` — Read Session History
+
+```ts
+import { getSessionMessages } from '@scottwalker/claude-connector'
+
+const messages = await getSessionMessages('abc-123-def-456', {
+  dir: '/home/user/project',
+  limit: 50,
+  offset: 0,
+})
+
+for (const msg of messages) {
+  console.log(`[${msg.type}] ${msg.uuid}`)
+  console.log(msg.message)
+}
+```
+
+## File Checkpointing
+
+Track file changes during a session and rewind them to a previous state (SDK mode only):
+
+```ts
+const claude = new Claude({
+  enableFileCheckpointing: true,
+})
+
+const r1 = await claude.query('Refactor the auth module')
+
+// Rewind files to the state before the refactoring
+const rewind = await claude.rewindFiles(r1.messages[0]?.content?.[0]?.id ?? '', {
+  dryRun: true, // preview only — no files changed
+})
+
+console.log('Can rewind:', rewind.canRewind)
+console.log('Files affected:', rewind.filesChanged)
+console.log('Insertions:', rewind.insertions)
+console.log('Deletions:', rewind.deletions)
+
+// Actually rewind (omit dryRun or set to false)
+const result = await claude.rewindFiles(r1.messages[0]?.content?.[0]?.id ?? '')
+console.log('Files reverted:', result.filesChanged)
+```
+
+::: tip
+Use `dryRun: true` first to preview which files would change. The `userMessageId` comes from the message history — it identifies the point in time to rewind to.
+:::

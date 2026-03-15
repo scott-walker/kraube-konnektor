@@ -103,3 +103,52 @@ new Claude({ permissionMode: PERMISSION_DONT_ASK })
 ::: warning
 `PERMISSION_BYPASS` and `PERMISSION_DONT_ASK` skip all safety checks. Only use them in fully sandboxed or CI environments where Claude's actions cannot cause harm.
 :::
+
+## Programmatic Permissions
+
+Use `canUseTool` to implement custom permission logic in code (SDK mode only):
+
+```ts
+const claude = new Claude({
+  canUseTool: async (toolName, input, { signal }) => {
+    // Block dangerous shell commands
+    if (toolName === 'Bash' && String(input.command).includes('rm -rf')) {
+      return { behavior: 'deny', message: 'Destructive command blocked' }
+    }
+
+    // Allow read-only tools unconditionally
+    if (['Read', 'Glob', 'Grep'].includes(toolName)) {
+      return { behavior: 'allow' }
+    }
+
+    // Everything else — allow but could also return 'deny'
+    return { behavior: 'allow' }
+  },
+})
+```
+
+::: tip
+`canUseTool` is called before every tool execution. Return `{ behavior: 'allow' }` to proceed, or `{ behavior: 'deny', message: '...' }` to block. You can also modify the tool input via `updatedInput` in the allow response.
+:::
+
+## Runtime Permission Switch
+
+Change the permission mode mid-session (SDK mode only):
+
+```ts
+import {
+  Claude,
+  PERMISSION_PLAN,
+  PERMISSION_ACCEPT_EDITS,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude({ permissionMode: PERMISSION_PLAN })
+
+// Start with read-only analysis
+const r1 = await claude.query('Review the auth module for vulnerabilities')
+
+// Now allow edits for the fix
+await claude.setPermissionMode(PERMISSION_ACCEPT_EDITS)
+
+const r2 = await claude.query('Fix the vulnerabilities you found')
+```

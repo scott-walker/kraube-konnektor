@@ -266,6 +266,93 @@ const result = await claude.query('Compare our auth with the shared lib', {
 })
 ```
 
+## Thinking Config
+
+Control Claude's extended thinking behavior (SDK mode only):
+
+```ts
+// Adaptive — Claude decides when and how deeply to think
+const claude = new Claude({
+  thinking: { type: 'adaptive' },
+})
+
+// Fixed budget — allocate a specific token budget for thinking
+const claude = new Claude({
+  thinking: { type: 'enabled', budgetTokens: 10_000 },
+})
+
+// Disabled — no extended thinking
+const claude = new Claude({
+  thinking: { type: 'disabled' },
+})
+
+// Per-query override
+const result = await claude.query('Solve this complex math problem', {
+  thinking: { type: 'enabled', budgetTokens: 50_000 },
+})
+```
+
+## Per-Query Abort with `signal`
+
+Cancel a specific query without affecting other queries or the client:
+
+```ts
+const claude = new Claude()
+
+const controller = new AbortController()
+
+// Abort this specific query after 10 seconds
+setTimeout(() => controller.abort(), 10_000)
+
+try {
+  const result = await claude.query('Analyze the entire codebase', {
+    signal: controller.signal,
+  })
+} catch (err) {
+  console.log('Query was aborted')
+}
+```
+
+::: tip
+`signal` cancels a single query. `claude.abort()` kills the entire active session. Use `signal` when running parallel queries and you only want to cancel one.
+:::
+
+## Runtime Model Switch
+
+Change the model mid-session (SDK mode only):
+
+```ts
+const claude = new Claude({ model: 'sonnet' })
+
+// Start a query, then switch model for the next turn
+const r1 = await claude.query('Outline the refactoring plan')
+
+await claude.setModel('opus')
+
+const r2 = await claude.query('Now implement step 1 of the plan')
+```
+
+## Account & Model Info
+
+Query account details and available models (SDK mode only):
+
+```ts
+const claude = new Claude()
+
+// Account information
+const account = await claude.accountInfo()
+console.log(account.email)            // "user@example.com"
+console.log(account.subscriptionType) // "max"
+
+// List supported models
+const models = await claude.supportedModels()
+for (const m of models) {
+  console.log(`${m.displayName} (${m.value})`)
+  console.log(`  Effort levels: ${m.supportedEffortLevels?.join(', ')}`)
+  console.log(`  Adaptive thinking: ${m.supportsAdaptiveThinking}`)
+}
+```
+
 ## Abort
 
 Cancel a running query:
