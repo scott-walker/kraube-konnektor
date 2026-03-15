@@ -774,7 +774,7 @@
         <div class="code-dot green"></div>
         <span>app.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
 
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({ <span class="prop">model</span>: <span class="str">'sonnet'</span> })
 <span class="kw">await</span> claude.<span class="fn">init</span>()
@@ -785,7 +785,7 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
 
 <span class="cm">// Or stream the response in real time</span>
 <span class="kw">await</span> claude.<span class="fn">stream</span>(<span class="str">'Find bugs'</span>)
-  .<span class="fn">on</span>(<span class="str">'text'</span>, t =&gt; process.stdout.<span class="fn">write</span>(t))
+  .<span class="fn">on</span>(EVENT_TEXT, t =&gt; process.stdout.<span class="fn">write</span>(t))
   .<span class="fn">done</span>()</pre>
     </div>
   </div>
@@ -851,12 +851,14 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
       </div>
       <div class="comp-card after">
         <h3><i data-lucide="sparkles" style="width:16px;height:16px;vertical-align:middle;margin-right:6px"></i>After &mdash; claude-connector</h3>
-<pre><span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>()
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+
+<span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>()
 <span class="kw">await</span> claude.<span class="fn">init</span>()
 
 <span class="cm">// Stream with fluent callbacks</span>
 <span class="kw">await</span> claude.<span class="fn">stream</span>(<span class="str">'Find bugs'</span>)
-  .<span class="fn">on</span>(<span class="str">'text'</span>, t =&gt; process.stdout.<span class="fn">write</span>(t))
+  .<span class="fn">on</span>(EVENT_TEXT, t =&gt; process.stdout.<span class="fn">write</span>(t))
   .<span class="fn">done</span>()
 
 <span class="cm">// Multi-turn sessions with memory</span>
@@ -902,14 +904,16 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
         <div class="code-dot green"></div>
         <span>monitor.ts</span>
       </div>
-<pre><span class="cm">// Check CI pipeline every 5 minutes</span>
+<pre><span class="kw">import</span> { SCHED_RESULT, SCHED_ERROR } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+
+<span class="cm">// Check CI pipeline every 5 minutes</span>
 <span class="kw">const</span> job = claude.<span class="fn">loop</span>(<span class="str">'5m'</span>, <span class="str">'Check CI status and report failures'</span>)
 
-job.<span class="fn">on</span>(<span class="str">'result'</span>, (result) =&gt; {
+job.<span class="fn">on</span>(SCHED_RESULT, (result) =&gt; {
   console.<span class="fn">log</span>(<span class="str">`[</span>${<span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toISOString</span>()}<span class="str">]`</span>, result.<span class="prop">text</span>)
 })
 
-job.<span class="fn">on</span>(<span class="str">'error'</span>, (err) =&gt; {
+job.<span class="fn">on</span>(SCHED_ERROR, (err) =&gt; {
   console.<span class="fn">error</span>(<span class="str">'Check failed:'</span>, err.<span class="prop">message</span>)
 })
 
@@ -1240,7 +1244,7 @@ console.<span class="fn">log</span>(<span class="str">`Done in </span>${result.<
         <div class="code-dot green"></div>
         <span>index.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
 
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({ <span class="prop">model</span>: <span class="str">'sonnet'</span> })
 <span class="kw">await</span> claude.<span class="fn">init</span>()
@@ -1251,7 +1255,7 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
 
 <span class="cm">// Or stream it live</span>
 <span class="kw">await</span> claude.<span class="fn">stream</span>(<span class="str">'Explain the architecture'</span>)
-  .<span class="fn">on</span>(<span class="str">'text'</span>, t =&gt; process.stdout.<span class="fn">write</span>(t))
+  .<span class="fn">on</span>(EVENT_TEXT, t =&gt; process.stdout.<span class="fn">write</span>(t))
   .<span class="fn">done</span>()</pre>
     </div>
 
