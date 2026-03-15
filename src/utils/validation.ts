@@ -1,4 +1,5 @@
 import { ValidationError } from '../errors/errors.js';
+import { VALID_PERMISSION_MODES, VALID_EFFORT_LEVELS } from '../constants.js';
 import type { ClientOptions, QueryOptions } from '../types/index.js';
 
 /**
@@ -13,15 +14,13 @@ export function validateClientOptions(options: ClientOptions): void {
     throw new ValidationError('maxBudget', 'must be a positive number');
   }
   if (options.permissionMode !== undefined) {
-    const valid = ['default', 'acceptEdits', 'plan', 'dontAsk', 'bypassPermissions', 'auto'];
-    if (!valid.includes(options.permissionMode)) {
-      throw new ValidationError('permissionMode', `must be one of: ${valid.join(', ')}`);
+    if (![...VALID_PERMISSION_MODES].includes(options.permissionMode)) {
+      throw new ValidationError('permissionMode', `must be one of: ${VALID_PERMISSION_MODES.join(', ')}`);
     }
   }
   if (options.effortLevel !== undefined) {
-    const valid = ['low', 'medium', 'high', 'max'];
-    if (!valid.includes(options.effortLevel)) {
-      throw new ValidationError('effortLevel', `must be one of: ${valid.join(', ')}`);
+    if (![...VALID_EFFORT_LEVELS].includes(options.effortLevel)) {
+      throw new ValidationError('effortLevel', `must be one of: ${VALID_EFFORT_LEVELS.join(', ')}`);
     }
   }
 }

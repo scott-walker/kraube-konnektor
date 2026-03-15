@@ -15,6 +15,8 @@ import { Claude } from '@scottwalker/claude-connector'
 - [Execution Modes](#execution-modes)
 - [Basic Query](#basic-query)
 - [Streaming](#streaming)
+- [StreamHandle API](#streamhandle-api)
+- [Chat](#chat)
 - [Sessions](#sessions)
 - [Parallel Queries](#parallel-queries)
 - [Scheduled Queries (Loop)](#scheduled-queries-loop)
@@ -48,7 +50,7 @@ import { Claude } from '@scottwalker/claude-connector'
 
 ### SDK mode (default)
 
-Persistent session via Claude Agent SDK. Fast after warm-up.
+Persistent session via Claude Agent SDK. Fast after warm-up. SDK mode is enabled by default (`useSdk: true`).
 
 ```ts
 const claude = new Claude({ model: 'sonnet' })
@@ -98,33 +100,45 @@ console.log(result.messages)    // full message history
 
 ## Streaming
 
-Real-time response as events arrive.
+Real-time response as events arrive. The `stream()` method returns a `StreamHandle`.
 
 ```ts
+import {
+  Claude,
+  StreamHandle,
+  EVENT_TEXT,
+  EVENT_TOOL_USE,
+  EVENT_RESULT,
+  EVENT_ERROR,
+  EVENT_SYSTEM,
+} from '@scottwalker/claude-connector'
+
 const claude = new Claude()
 
-for await (const event of claude.stream('Refactor auth.ts')) {
+const handle: StreamHandle = claude.stream('Refactor auth.ts')
+
+for await (const event of handle) {
   switch (event.type) {
-    case 'text':
+    case EVENT_TEXT:
       process.stdout.write(event.text)
       break
 
-    case 'tool_use':
+    case EVENT_TOOL_USE:
       console.log(`\n[Tool: ${event.toolName}]`)
       console.log(event.toolInput)
       break
 
-    case 'result':
+    case EVENT_RESULT:
       console.log(`\nDone in ${event.durationMs}ms`)
       console.log(`Tokens: ${event.usage.inputTokens} in, ${event.usage.outputTokens} out`)
       console.log(`Session: ${event.sessionId}`)
       break
 
-    case 'error':
+    case EVENT_ERROR:
       console.error(`Error: ${event.message}`)
       break
 
-    case 'system':
+    case EVENT_SYSTEM:
       console.log(`[System/${event.subtype}]`, event.data)
       break
   }
@@ -134,13 +148,121 @@ for await (const event of claude.stream('Refactor auth.ts')) {
 ### Collect stream into a string
 
 ```ts
+import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
 let fullText = ''
 
 for await (const event of claude.stream('Summarize README.md')) {
-  if (event.type === 'text') fullText += event.text
+  if (event.type === EVENT_TEXT) fullText += event.text
 }
 
 console.log(fullText)
+```
+
+---
+
+## StreamHandle API
+
+`stream()` returns a `StreamHandle` with fluent callbacks, convenience methods, and Node.js stream support.
+
+### Fluent callbacks with `.on()` and `.done()`
+
+```ts
+import {
+  Claude,
+  EVENT_TEXT,
+  EVENT_TOOL_USE,
+  EVENT_RESULT,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
+const result = await claude.stream('Refactor auth')
+  .on(EVENT_TEXT, (text) => process.stdout.write(text))
+  .on(EVENT_TOOL_USE, (event) => console.log(`[Tool: ${event.toolName}]`))
+  .on(EVENT_RESULT, (event) => console.log(`\nCost: $${event.cost}`))
+  .done()
+
+console.log(`Session: ${result.sessionId}`)
+```
+
+### Collect all text with `.text()`
+
+```ts
+const text = await claude.stream('Summarize README.md').text()
+console.log(text)
+```
+
+### Pipe to stdout with `.pipe()`
+
+```ts
+const result = await claude.stream('Explain the auth module').pipe(process.stdout)
+console.log(`\nDone in ${result.durationMs}ms`)
+```
+
+### Convert to Node.js Readable with `.toReadable()`
+
+```ts
+import { pipeline } from 'node:stream/promises'
+import { createGzip } from 'node:zlib'
+import { createWriteStream } from 'node:fs'
+
+await pipeline(
+  claude.stream('Generate a report').toReadable(),
+  createGzip(),
+  createWriteStream('report.gz'),
+)
+```
+
+---
+
+## Chat
+
+Bidirectional streaming for multi-turn conversation over a single persistent process.
+
+```ts
+import {
+  Claude,
+  ChatHandle,
+  EVENT_TEXT,
+  EVENT_RESULT,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
+const chat: ChatHandle = claude.chat()
+  .on(EVENT_TEXT, (text) => process.stdout.write(text))
+  .on(EVENT_RESULT, (event) => console.log(`\n[Turn done in ${event.durationMs}ms]`))
+
+// Each send() returns a promise that resolves when the turn completes
+await chat.send('What files are in src?')
+await chat.send('Refactor the largest one')
+
+console.log(`Session: ${chat.sessionId}`)
+console.log(`Turns: ${chat.turnCount}`)
+
+// Graceful close
+chat.end()
+```
+
+### Chat as a Node.js Duplex stream
+
+```ts
+const duplex = claude.chat().toDuplex()
+inputStream.pipe(duplex).pipe(process.stdout)
+```
+
+### Chat as a Readable stream
+
+```ts
+const chat = claude.chat()
+chat.toReadable().pipe(process.stdout)
+
+await chat.send('Explain the codebase')
+await chat.send('Now summarize in bullet points')
+chat.end()
 ```
 
 ---
@@ -198,10 +320,13 @@ const result = await session.query('Try a different approach')
 ### Streaming within a session
 
 ```ts
+import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const session = claude.session()
 
 for await (const event of session.stream('Analyze the codebase')) {
-  if (event.type === 'text') process.stdout.write(event.text)
+  if (event.type === EVENT_TEXT) process.stdout.write(event.text)
 }
 
 // Session ID is captured from the stream result
@@ -239,21 +364,31 @@ for (const result of results) {
 Recurring queries at fixed intervals — the programmatic equivalent of `/loop`.
 
 ```ts
+import {
+  Claude,
+  SCHED_RESULT,
+  SCHED_ERROR,
+  SCHED_TICK,
+  SCHED_STOP,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
 const job = claude.loop('5m', 'Check deploy status on staging')
 
-job.on('result', (result) => {
+job.on(SCHED_RESULT, (result) => {
   console.log(`[Tick ${job.tickCount}] ${result.text}`)
 })
 
-job.on('error', (err) => {
+job.on(SCHED_ERROR, (err) => {
   console.error('Query failed:', err.message)
 })
 
-job.on('tick', (count) => {
+job.on(SCHED_TICK, (count) => {
   console.log(`Starting tick #${count}...`)
 })
 
-job.on('stop', () => {
+job.on(SCHED_STOP, () => {
   console.log('Job stopped')
 })
 
@@ -323,10 +458,18 @@ const claude = new Claude({
 Controls thinking depth.
 
 ```ts
-const claude = new Claude({ effortLevel: 'low' })    // fast, shallow
-const claude = new Claude({ effortLevel: 'medium' })  // balanced
-const claude = new Claude({ effortLevel: 'high' })    // deep thinking
-const claude = new Claude({ effortLevel: 'max' })     // maximum depth
+import {
+  Claude,
+  EFFORT_LOW,
+  EFFORT_MEDIUM,
+  EFFORT_HIGH,
+  EFFORT_MAX,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude({ effortLevel: EFFORT_LOW })    // fast, shallow
+const claude = new Claude({ effortLevel: EFFORT_MEDIUM })  // balanced
+const claude = new Claude({ effortLevel: EFFORT_HIGH })    // deep thinking
+const claude = new Claude({ effortLevel: EFFORT_MAX })     // maximum depth
 ```
 
 ---
@@ -369,23 +512,33 @@ const result = await claude.query('Explain ownership', {
 ## Permission Modes
 
 ```ts
+import {
+  Claude,
+  PERMISSION_DEFAULT,
+  PERMISSION_ACCEPT_EDITS,
+  PERMISSION_PLAN,
+  PERMISSION_AUTO,
+  PERMISSION_BYPASS,
+  PERMISSION_DONT_ASK,
+} from '@scottwalker/claude-connector'
+
 // Prompt on first use (default behavior)
-new Claude({ permissionMode: 'default' })
+new Claude({ permissionMode: PERMISSION_DEFAULT })
 
 // Auto-accept file edits
-new Claude({ permissionMode: 'acceptEdits' })
+new Claude({ permissionMode: PERMISSION_ACCEPT_EDITS })
 
 // Read-only — no modifications allowed
-new Claude({ permissionMode: 'plan' })
+new Claude({ permissionMode: PERMISSION_PLAN })
 
 // Automatic tool approval based on risk
-new Claude({ permissionMode: 'auto' })
+new Claude({ permissionMode: PERMISSION_AUTO })
 
 // Skip all permission checks (use only in sandboxed environments)
-new Claude({ permissionMode: 'bypassPermissions' })
+new Claude({ permissionMode: PERMISSION_BYPASS })
 
 // Skip all checks, don't even ask
-new Claude({ permissionMode: 'dontAsk' })
+new Claude({ permissionMode: PERMISSION_DONT_ASK })
 ```
 
 ---
@@ -616,6 +769,12 @@ const claude = new Claude({
 ### Define and use custom agents
 
 ```ts
+import {
+  Claude,
+  PERMISSION_PLAN,
+  PERMISSION_ACCEPT_EDITS,
+} from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   agents: {
     reviewer: {
@@ -623,14 +782,14 @@ const claude = new Claude({
       prompt: 'You are a senior code reviewer. Focus on security, performance, and maintainability.',
       model: 'opus',
       tools: ['Read', 'Glob', 'Grep'],
-      permissionMode: 'plan',
+      permissionMode: PERMISSION_PLAN,
       maxTurns: 10,
     },
     fixer: {
       description: 'Fixes bugs and implements features',
       prompt: 'You fix bugs. Be minimal and precise.',
       model: 'sonnet',
-      permissionMode: 'acceptEdits',
+      permissionMode: PERMISSION_ACCEPT_EDITS,
     },
     researcher: {
       description: 'Explores codebases and answers questions',
@@ -789,18 +948,25 @@ setTimeout(() => session.abort(), 5_000)
 Track initialization progress in SDK mode.
 
 ```ts
+import {
+  Claude,
+  INIT_EVENT_STAGE,
+  INIT_EVENT_READY,
+  INIT_EVENT_ERROR,
+} from '@scottwalker/claude-connector'
+
 const claude = new Claude({ model: 'sonnet' })
 
-claude.on('init:stage', (stage, message) => {
-  // stage: 'importing' → 'creating' → 'connecting' → 'ready'
+claude.on(INIT_EVENT_STAGE, (stage, message) => {
+  // stage: 'importing' -> 'creating' -> 'connecting' -> 'ready'
   console.log(`[${stage}] ${message}`)
 })
 
-claude.on('init:ready', () => {
+claude.on(INIT_EVENT_READY, () => {
   console.log('SDK session is warm — queries will be fast')
 })
 
-claude.on('init:error', (error) => {
+claude.on(INIT_EVENT_ERROR, (error) => {
   console.error('SDK init failed:', error.message)
 })
 
@@ -828,6 +994,11 @@ claude.close()
 Use a specific Claude Code binary.
 
 ```ts
+import { Claude, DEFAULT_EXECUTABLE } from '@scottwalker/claude-connector'
+
+// Default executable is 'claude'
+console.log(DEFAULT_EXECUTABLE) // 'claude'
+
 const claude = new Claude({
   executable: '/usr/local/bin/claude-2.0',
 })
@@ -848,12 +1019,20 @@ const claude = new Claude({
 Any `ClientOptions` field that has a `QueryOptions` counterpart can be overridden per-query.
 
 ```ts
+import {
+  Claude,
+  PERMISSION_PLAN,
+  PERMISSION_ACCEPT_EDITS,
+  EFFORT_MEDIUM,
+  EFFORT_MAX,
+} from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   model: 'sonnet',
   maxTurns: 10,
   maxBudget: 5.0,
-  permissionMode: 'plan',
-  effortLevel: 'medium',
+  permissionMode: PERMISSION_PLAN,
+  effortLevel: EFFORT_MEDIUM,
   systemPrompt: 'You are a helpful assistant.',
   allowedTools: ['Read', 'Glob'],
   tools: ['Read', 'Glob', 'Grep', 'Bash'],
@@ -864,8 +1043,8 @@ const result = await claude.query('Fix the critical bug NOW', {
   model: 'opus',
   maxTurns: 50,
   maxBudget: 20.0,
-  permissionMode: 'acceptEdits',
-  effortLevel: 'max',
+  permissionMode: PERMISSION_ACCEPT_EDITS,
+  effortLevel: EFFORT_MAX,
   systemPrompt: 'You are an emergency bug fixer. Act fast.',
   allowedTools: ['Read', 'Glob', 'Grep', 'Edit', 'Bash'],
   tools: ['default'],
@@ -959,6 +1138,16 @@ result.raw            // Record<string, unknown> — raw CLI JSON response
 ### Accessing message history
 
 ```ts
+import {
+  Claude,
+  BLOCK_TEXT,
+  BLOCK_TOOL_USE,
+  BLOCK_TOOL_RESULT,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+const result = await claude.query('Explain the auth module')
+
 for (const msg of result.messages) {
   console.log(`[${msg.role}]`)
 
@@ -967,13 +1156,13 @@ for (const msg of result.messages) {
   } else {
     for (const block of msg.content) {
       switch (block.type) {
-        case 'text':
+        case BLOCK_TEXT:
           console.log(block.text)
           break
-        case 'tool_use':
+        case BLOCK_TOOL_USE:
           console.log(`Tool: ${block.name}(${JSON.stringify(block.input)})`)
           break
-        case 'tool_result':
+        case BLOCK_TOOL_RESULT:
           console.log(`Result: ${block.content}`)
           break
       }
@@ -1003,7 +1192,15 @@ Full reference for the discriminated union yielded by `stream()`.
 Inject a custom executor for testing or custom transport.
 
 ```ts
-import { Claude, type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent } from '@scottwalker/claude-connector'
+import {
+  Claude,
+  EVENT_TEXT,
+  EVENT_RESULT,
+  type IExecutor,
+  type ExecuteOptions,
+  type QueryResult,
+  type StreamEvent,
+} from '@scottwalker/claude-connector'
 
 const mockExecutor: IExecutor = {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {
@@ -1020,9 +1217,9 @@ const mockExecutor: IExecutor = {
   },
 
   async *stream(args: readonly string[], options: ExecuteOptions): AsyncIterable<StreamEvent> {
-    yield { type: 'text', text: 'Mocked stream' }
+    yield { type: EVENT_TEXT, text: 'Mocked stream' }
     yield {
-      type: 'result',
+      type: EVENT_RESULT,
       text: 'Mocked stream',
       sessionId: 'mock-session',
       usage: { inputTokens: 0, outputTokens: 0 },

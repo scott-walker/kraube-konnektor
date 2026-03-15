@@ -36,6 +36,8 @@
 // ── Main client ───────────────────────────────────────────────────
 export { Claude } from './client/claude.js';
 export { Session } from './client/session.js';
+export { StreamHandle } from './client/stream-handle.js';
+export { ChatHandle } from './client/chat-handle.js';
 
 // ── Executor abstraction ──────────────────────────────────────────
 export type { IExecutor, ExecuteOptions } from './executor/interface.js';
@@ -64,6 +66,49 @@ export {
   ParseError,
   ValidationError,
 } from './errors/errors.js';
+
+// ── Constants ─────────────────────────────────────────────────────
+export {
+  // Stream event types
+  EVENT_TEXT,
+  EVENT_TOOL_USE,
+  EVENT_RESULT,
+  EVENT_ERROR,
+  EVENT_SYSTEM,
+
+  // Permission modes
+  PERMISSION_DEFAULT,
+  PERMISSION_ACCEPT_EDITS,
+  PERMISSION_PLAN,
+  PERMISSION_DONT_ASK,
+  PERMISSION_BYPASS,
+  PERMISSION_AUTO,
+
+  // Effort levels
+  EFFORT_LOW,
+  EFFORT_MEDIUM,
+  EFFORT_HIGH,
+  EFFORT_MAX,
+
+  // Scheduler events
+  SCHED_RESULT,
+  SCHED_ERROR,
+  SCHED_TICK,
+  SCHED_STOP,
+
+  // Init events
+  INIT_EVENT_STAGE,
+  INIT_EVENT_READY,
+  INIT_EVENT_ERROR,
+
+  // Defaults
+  DEFAULT_EXECUTABLE,
+
+  // Content block types
+  BLOCK_TEXT,
+  BLOCK_TOOL_USE,
+  BLOCK_TOOL_RESULT,
+} from './constants.js';
 
 // ── Types ─────────────────────────────────────────────────────────
 export type {

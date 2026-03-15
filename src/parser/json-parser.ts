@@ -1,5 +1,10 @@
 import { ParseError } from '../errors/errors.js';
 import type { QueryResult, Message, TokenUsage } from '../types/index.js';
+import {
+  KEY_RESULT, KEY_SESSION_ID, KEY_USAGE, KEY_INPUT_TOKENS, KEY_OUTPUT_TOKENS,
+  KEY_TOTAL_COST, KEY_DURATION, KEY_MESSAGES, KEY_CONTENT, KEY_ROLE, KEY_TEXT,
+  KEY_TYPE, KEY_STRUCTURED_OUTPUT, ROLE_ASSISTANT,
+} from '../constants.js';
 
 /**
  * Parses the JSON output from `claude -p --output-format json`.
@@ -33,17 +38,17 @@ export function parseJsonResult(stdout: string): QueryResult {
     throw new ParseError(`Failed to parse CLI JSON output: ${trimmed.slice(0, 200)}`, stdout);
   }
 
-  const usage = parseUsage(json['usage']);
-  const messages = parseMessages(json['messages']);
+  const usage = parseUsage(json[KEY_USAGE]);
+  const messages = parseMessages(json[KEY_MESSAGES]);
 
   return {
-    text: typeof json['result'] === 'string' ? json['result'] : extractText(json),
-    sessionId: String(json['session_id'] ?? ''),
+    text: typeof json[KEY_RESULT] === 'string' ? json[KEY_RESULT] : extractText(json),
+    sessionId: String(json[KEY_SESSION_ID] ?? ''),
     usage,
-    cost: typeof json['total_cost_usd'] === 'number' ? json['total_cost_usd'] : null,
-    durationMs: typeof json['duration_ms'] === 'number' ? json['duration_ms'] : 0,
+    cost: typeof json[KEY_TOTAL_COST] === 'number' ? json[KEY_TOTAL_COST] : null,
+    durationMs: typeof json[KEY_DURATION] === 'number' ? json[KEY_DURATION] : 0,
     messages,
-    structured: json['structured_output'] ?? null,
+    structured: json[KEY_STRUCTURED_OUTPUT] ?? null,
     raw: json,
   };
 }
@@ -52,8 +57,8 @@ function parseUsage(raw: unknown): TokenUsage {
   if (raw && typeof raw === 'object') {
     const obj = raw as Record<string, unknown>;
     return {
-      inputTokens: typeof obj['input_tokens'] === 'number' ? obj['input_tokens'] : 0,
-      outputTokens: typeof obj['output_tokens'] === 'number' ? obj['output_tokens'] : 0,
+      inputTokens: typeof obj[KEY_INPUT_TOKENS] === 'number' ? obj[KEY_INPUT_TOKENS] : 0,
+      outputTokens: typeof obj[KEY_OUTPUT_TOKENS] === 'number' ? obj[KEY_OUTPUT_TOKENS] : 0,
     };
   }
   return { inputTokens: 0, outputTokens: 0 };
@@ -63,8 +68,8 @@ function parseMessages(raw: unknown): Message[] {
   if (!Array.isArray(raw)) return [];
 
   return raw.map((msg: Record<string, unknown>) => ({
-    role: msg['role'] as 'user' | 'assistant',
-    content: typeof msg['content'] === 'string' ? msg['content'] : msg['content'] as Message['content'],
+    role: msg[KEY_ROLE] as 'user' | 'assistant',
+    content: typeof msg[KEY_CONTENT] === 'string' ? msg[KEY_CONTENT] : msg[KEY_CONTENT] as Message['content'],
   }));
 }
 
@@ -73,17 +78,17 @@ function parseMessages(raw: unknown): Message[] {
  * Looks for the last assistant message content.
  */
 function extractText(json: Record<string, unknown>): string {
-  const messages = json['messages'];
+  const messages = json[KEY_MESSAGES];
   if (!Array.isArray(messages)) return '';
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i] as Record<string, unknown>;
-    if (msg['role'] === 'assistant') {
-      if (typeof msg['content'] === 'string') return msg['content'];
-      if (Array.isArray(msg['content'])) {
-        const textBlocks = (msg['content'] as Record<string, unknown>[])
-          .filter((b) => b['type'] === 'text')
-          .map((b) => b['text'] as string);
+    if (msg[KEY_ROLE] === ROLE_ASSISTANT) {
+      if (typeof msg[KEY_CONTENT] === 'string') return msg[KEY_CONTENT];
+      if (Array.isArray(msg[KEY_CONTENT])) {
+        const textBlocks = (msg[KEY_CONTENT] as Record<string, unknown>[])
+          .filter((b) => b[KEY_TYPE] === KEY_TEXT)
+          .map((b) => b[KEY_TEXT] as string);
         return textBlocks.join('');
       }
     }

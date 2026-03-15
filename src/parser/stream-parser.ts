@@ -1,4 +1,10 @@
 import type { StreamEvent } from '../types/index.js';
+import {
+  KEY_TYPE, KEY_RESULT, KEY_SESSION_ID, KEY_USAGE, KEY_INPUT_TOKENS, KEY_OUTPUT_TOKENS,
+  KEY_TOTAL_COST, KEY_DURATION, KEY_MESSAGE, KEY_CONTENT, KEY_TEXT, KEY_NAME, KEY_INPUT,
+  KEY_ERROR, KEY_CODE, EVENT_RESULT, EVENT_ERROR, EVENT_TEXT, EVENT_TOOL_USE, EVENT_SYSTEM,
+  ROLE_ASSISTANT, BLOCK_TEXT, BLOCK_TOOL_USE, SYSTEM_UNKNOWN,
+} from '../constants.js';
 
 /**
  * Parses a single line of NDJSON from `claude -p --output-format stream-json`.
@@ -27,67 +33,67 @@ export function parseStreamLine(line: string): StreamEvent | null {
     return null;
   }
 
-  const type = json['type'];
+  const type = json[KEY_TYPE];
 
-  if (type === 'result') {
+  if (type === EVENT_RESULT) {
     return parseResultEvent(json);
   }
 
-  if (type === 'assistant') {
+  if (type === ROLE_ASSISTANT) {
     return parseAssistantEvent(json);
   }
 
-  if (type === 'error') {
+  if (type === EVENT_ERROR) {
     return {
-      type: 'error',
-      message: String(json['message'] ?? json['error'] ?? 'Unknown error'),
-      code: typeof json['code'] === 'string' ? json['code'] : undefined,
+      type: EVENT_ERROR,
+      message: String(json[KEY_MESSAGE] ?? json[KEY_ERROR] ?? 'Unknown error'),
+      code: typeof json[KEY_CODE] === 'string' ? json[KEY_CODE] : undefined,
     };
   }
 
   // Forward unknown types as system events
   return {
-    type: 'system',
-    subtype: String(type ?? 'unknown'),
+    type: EVENT_SYSTEM,
+    subtype: String(type ?? SYSTEM_UNKNOWN),
     data: json,
   };
 }
 
 function parseResultEvent(json: Record<string, unknown>): StreamEvent {
-  const usage = json['usage'] as Record<string, unknown> | undefined;
+  const usage = json[KEY_USAGE] as Record<string, unknown> | undefined;
 
   return {
-    type: 'result',
-    text: typeof json['result'] === 'string' ? json['result'] : '',
-    sessionId: String(json['session_id'] ?? ''),
+    type: EVENT_RESULT,
+    text: typeof json[KEY_RESULT] === 'string' ? json[KEY_RESULT] : '',
+    sessionId: String(json[KEY_SESSION_ID] ?? ''),
     usage: {
-      inputTokens: typeof usage?.['input_tokens'] === 'number' ? usage['input_tokens'] : 0,
-      outputTokens: typeof usage?.['output_tokens'] === 'number' ? usage['output_tokens'] : 0,
+      inputTokens: typeof usage?.[KEY_INPUT_TOKENS] === 'number' ? usage[KEY_INPUT_TOKENS] : 0,
+      outputTokens: typeof usage?.[KEY_OUTPUT_TOKENS] === 'number' ? usage[KEY_OUTPUT_TOKENS] : 0,
     },
-    cost: typeof json['total_cost_usd'] === 'number' ? json['total_cost_usd'] : null,
-    durationMs: typeof json['duration_ms'] === 'number' ? json['duration_ms'] : 0,
+    cost: typeof json[KEY_TOTAL_COST] === 'number' ? json[KEY_TOTAL_COST] : null,
+    durationMs: typeof json[KEY_DURATION] === 'number' ? json[KEY_DURATION] : 0,
   };
 }
 
 function parseAssistantEvent(json: Record<string, unknown>): StreamEvent | null {
-  const message = json['message'] as Record<string, unknown> | undefined;
+  const message = json[KEY_MESSAGE] as Record<string, unknown> | undefined;
   if (!message) return null;
 
-  const content = message['content'];
+  const content = message[KEY_CONTENT];
   if (!Array.isArray(content) || content.length === 0) return null;
 
   // Process the last content block (most relevant for streaming)
   const block = content[content.length - 1] as Record<string, unknown>;
 
-  if (block['type'] === 'text' && typeof block['text'] === 'string') {
-    return { type: 'text', text: block['text'] };
+  if (block[KEY_TYPE] === BLOCK_TEXT && typeof block[KEY_TEXT] === 'string') {
+    return { type: EVENT_TEXT, text: block[KEY_TEXT] };
   }
 
-  if (block['type'] === 'tool_use') {
+  if (block[KEY_TYPE] === BLOCK_TOOL_USE) {
     return {
-      type: 'tool_use',
-      toolName: String(block['name'] ?? ''),
-      toolInput: (block['input'] as Record<string, unknown>) ?? {},
+      type: EVENT_TOOL_USE,
+      toolName: String(block[KEY_NAME] ?? ''),
+      toolInput: (block[KEY_INPUT] as Record<string, unknown>) ?? {},
     };
   }
 

@@ -2,6 +2,42 @@ import { EventEmitter } from 'node:events';
 import type { QueryResult, StreamEvent, TokenUsage } from '../types/index.js';
 import type { IExecutor, ExecuteOptions } from './interface.js';
 import { CliExecutionError, ParseError } from '../errors/errors.js';
+import {
+  INIT_IMPORTING,
+  INIT_CREATING,
+  INIT_CONNECTING,
+  INIT_READY,
+  DEFAULT_MODEL,
+  INIT_EVENT_STAGE,
+  INIT_EVENT_READY,
+  INIT_EVENT_ERROR,
+  SYSTEM_INIT,
+  EVENT_SYSTEM,
+  EVENT_RESULT,
+  EVENT_TEXT,
+  EVENT_TOOL_USE,
+  ROLE_ASSISTANT,
+  KEY_MESSAGE,
+  KEY_CONTENT,
+  KEY_TYPE,
+  KEY_TEXT,
+  BLOCK_TOOL_USE,
+  KEY_NAME,
+  KEY_INPUT,
+  KEY_RESULT,
+  KEY_SESSION_ID,
+  KEY_USAGE,
+  KEY_INPUT_TOKENS,
+  KEY_OUTPUT_TOKENS,
+  KEY_TOTAL_COST,
+  KEY_DURATION,
+  KEY_MODEL,
+  KEY_TOOLS,
+  KEY_SUBTYPE,
+  FLAGS_WITH_VALUE,
+  FORMAT_JSON,
+  FORMAT_STREAM_JSON,
+} from '../constants.js';
 
 // Dynamic import to avoid hard crash if SDK is not installed
 type SDKModule = typeof import('@anthropic-ai/claude-agent-sdk');
@@ -13,21 +49,21 @@ type SDKMessage = import('@anthropic-ai/claude-agent-sdk').SDKMessage;
  * Initialization stages emitted during SDK warm-up.
  */
 export type InitStage =
-  | 'importing'       // Loading SDK module
-  | 'creating'        // Creating session via unstable_v2_createSession
-  | 'connecting'      // Waiting for first system message (init)
-  | 'ready';          // Session is warm and ready for queries
+  | typeof INIT_IMPORTING   // Loading SDK module
+  | typeof INIT_CREATING    // Creating session via unstable_v2_createSession
+  | typeof INIT_CONNECTING  // Waiting for first system message (init)
+  | typeof INIT_READY;      // Session is warm and ready for queries
 
 /**
  * Events emitted by SdkExecutor.
  */
 export interface SdkExecutorEvents {
   /** Emitted as initialization progresses through stages. */
-  'init:stage': [InitStage, string];
+  [INIT_EVENT_STAGE]: [InitStage, string];
   /** Emitted once the session is fully warmed up. */
-  'init:ready': [];
+  [INIT_EVENT_READY]: [];
   /** Emitted if initialization fails. */
-  'init:error': [Error];
+  [INIT_EVENT_ERROR]: [Error];
 }
 
 /**
@@ -121,9 +157,9 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
       const parsed = this.mapMessage(msg);
       if (!parsed) continue;
 
-      if (parsed.type === 'text') {
+      if (parsed.type === EVENT_TEXT) {
         resultText += parsed.text;
-      } else if (parsed.type === 'result') {
+      } else if (parsed.type === EVENT_RESULT) {
         resultText = parsed.text || resultText;
         sessionId = parsed.sessionId;
         usage = parsed.usage;
@@ -184,13 +220,13 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
   private async doInit(): Promise<void> {
     try {
       // Stage 1: Import SDK
-      this.emit('init:stage', 'importing', 'Loading Claude Agent SDK...');
+      this.emit(INIT_EVENT_STAGE, INIT_IMPORTING, 'Loading Claude Agent SDK...');
       this.sdkModule = await import('@anthropic-ai/claude-agent-sdk');
 
       // Stage 2: Create session
-      this.emit('init:stage', 'creating', 'Creating persistent session...');
+      this.emit(INIT_EVENT_STAGE, INIT_CREATING, 'Creating persistent session...');
       const sessionOptions: SDKSessionOptions = {
-        model: this.sdkOptions.model ?? 'sonnet',
+        model: this.sdkOptions.model ?? DEFAULT_MODEL,
         permissionMode: this.sdkOptions.permissionMode as SDKSessionOptions['permissionMode'],
         allowedTools: this.sdkOptions.allowedTools as string[] | undefined,
         disallowedTools: this.sdkOptions.disallowedTools as string[] | undefined,
@@ -218,31 +254,31 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
       this.session = this.sdkModule.unstable_v2_createSession(sessionOptions);
 
       // Stage 3: Warm up — send a no-op to trigger initialization, wait for init message
-      this.emit('init:stage', 'connecting', 'Waiting for Claude Code to initialize...');
+      this.emit(INIT_EVENT_STAGE, INIT_CONNECTING, 'Waiting for Claude Code to initialize...');
       // The session initializes on first send+stream
       await this.session.send('.');
 
       for await (const msg of this.session.stream()) {
-        if (msg.type === 'system' && 'subtype' in msg && msg.subtype === 'init') {
+        if (msg.type === EVENT_SYSTEM && KEY_SUBTYPE in msg && msg.subtype === SYSTEM_INIT) {
           const sysMsg = msg as Record<string, unknown>;
           this.emit(
-            'init:stage',
-            'connecting',
-            `Connected: model=${sysMsg['model']}, tools=${(sysMsg['tools'] as string[] | undefined)?.length ?? 0}`,
+            INIT_EVENT_STAGE,
+            INIT_CONNECTING,
+            `Connected: model=${sysMsg[KEY_MODEL]}, tools=${(sysMsg[KEY_TOOLS] as string[] | undefined)?.length ?? 0}`,
           );
         }
-        if (msg.type === 'result') {
+        if (msg.type === EVENT_RESULT) {
           break;
         }
       }
 
       // Stage 4: Ready
       this._ready = true;
-      this.emit('init:stage', 'ready', 'Session is warm and ready');
-      this.emit('init:ready');
+      this.emit(INIT_EVENT_STAGE, INIT_READY, 'Session is warm and ready');
+      this.emit(INIT_EVENT_READY);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      this.emit('init:error', error);
+      this.emit(INIT_EVENT_ERROR, error);
       throw error;
     }
   }
@@ -258,39 +294,39 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
    */
   private mapMessage(msg: SDKMessage): StreamEvent | null {
     switch (msg.type) {
-      case 'assistant': {
+      case ROLE_ASSISTANT: {
         const assistantMsg = msg as Record<string, unknown>;
-        const message = assistantMsg['message'] as Record<string, unknown> | undefined;
-        const content = message?.['content'] as Array<Record<string, unknown>> | undefined;
+        const message = assistantMsg[KEY_MESSAGE] as Record<string, unknown> | undefined;
+        const content = message?.[KEY_CONTENT] as Array<Record<string, unknown>> | undefined;
         if (!content?.length) return null;
 
         const lastBlock = content[content.length - 1]!;
-        if (lastBlock['type'] === 'text' && typeof lastBlock['text'] === 'string') {
-          return { type: 'text', text: lastBlock['text'] };
+        if (lastBlock[KEY_TYPE] === EVENT_TEXT && typeof lastBlock[KEY_TEXT] === 'string') {
+          return { type: EVENT_TEXT, text: lastBlock[KEY_TEXT] };
         }
-        if (lastBlock['type'] === 'tool_use') {
+        if (lastBlock[KEY_TYPE] === BLOCK_TOOL_USE) {
           return {
-            type: 'tool_use',
-            toolName: String(lastBlock['name'] ?? ''),
-            toolInput: (lastBlock['input'] as Record<string, unknown>) ?? {},
+            type: EVENT_TOOL_USE,
+            toolName: String(lastBlock[KEY_NAME] ?? ''),
+            toolInput: (lastBlock[KEY_INPUT] as Record<string, unknown>) ?? {},
           };
         }
         return null;
       }
 
-      case 'result': {
+      case EVENT_RESULT: {
         const result = msg as Record<string, unknown>;
-        const usage = result['usage'] as Record<string, unknown> | undefined;
+        const usage = result[KEY_USAGE] as Record<string, unknown> | undefined;
         return {
-          type: 'result',
-          text: typeof result['result'] === 'string' ? result['result'] : '',
-          sessionId: String(result['session_id'] ?? ''),
+          type: EVENT_RESULT,
+          text: typeof result[KEY_RESULT] === 'string' ? result[KEY_RESULT] : '',
+          sessionId: String(result[KEY_SESSION_ID] ?? ''),
           usage: {
-            inputTokens: typeof usage?.['input_tokens'] === 'number' ? usage['input_tokens'] : 0,
-            outputTokens: typeof usage?.['output_tokens'] === 'number' ? usage['output_tokens'] : 0,
+            inputTokens: typeof usage?.[KEY_INPUT_TOKENS] === 'number' ? usage[KEY_INPUT_TOKENS] : 0,
+            outputTokens: typeof usage?.[KEY_OUTPUT_TOKENS] === 'number' ? usage[KEY_OUTPUT_TOKENS] : 0,
           },
-          cost: typeof result['total_cost_usd'] === 'number' ? result['total_cost_usd'] : null,
-          durationMs: typeof result['duration_ms'] === 'number' ? result['duration_ms'] : 0,
+          cost: typeof result[KEY_TOTAL_COST] === 'number' ? result[KEY_TOTAL_COST] : null,
+          durationMs: typeof result[KEY_DURATION] === 'number' ? result[KEY_DURATION] : 0,
         };
       }
 
@@ -349,19 +385,13 @@ function extractPrompt(args: readonly string[]): string {
     }
     if (arg.startsWith('--')) {
       // Flags that take a value
-      if ([
-        '--output-format', '--model', '--fallback-model', '--permission-mode',
-        '--system-prompt', '--append-system-prompt', '--max-turns', '--max-budget-usd',
-        '--add-dir', '--mcp-config', '--agents', '--json-schema', '--worktree',
-        '--resume', '--session-id', '--allowedTools', '--disallowedTools',
-        '--agent', '--tools', '--name', '--settings', '--effort',
-      ].includes(arg)) {
+      if ((FLAGS_WITH_VALUE as readonly string[]).includes(arg)) {
         skipNext = true;
       }
       continue;
     }
     // Skip format values
-    if (arg === 'json' || arg === 'stream-json' || arg === 'text') continue;
+    if (arg === FORMAT_JSON || arg === FORMAT_STREAM_JSON || arg === 'text') continue;
     // This should be the prompt
     return arg;
   }

@@ -1,3 +1,12 @@
+import {
+  ERR_NAME_BASE,
+  ERR_NAME_NOT_FOUND,
+  ERR_NAME_EXECUTION,
+  ERR_NAME_TIMEOUT,
+  ERR_NAME_PARSE,
+  ERR_NAME_VALIDATION,
+} from '../constants.js';
+
 /**
  * Base error class for all claude-connector errors.
  *
@@ -13,7 +22,7 @@
 export class ClaudeConnectorError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ClaudeConnectorError';
+    this.name = ERR_NAME_BASE;
   }
 }
 
@@ -29,7 +38,7 @@ export class CliNotFoundError extends ClaudeConnectorError {
       `Ensure it is installed and the path is correct. ` +
       `Install: https://docs.anthropic.com/en/docs/claude-code/overview`,
     );
-    this.name = 'CliNotFoundError';
+    this.name = ERR_NAME_NOT_FOUND;
     this.executable = executable;
   }
 }
@@ -43,7 +52,7 @@ export class CliExecutionError extends ClaudeConnectorError {
 
   constructor(message: string, exitCode: number, stderr: string) {
     super(message);
-    this.name = 'CliExecutionError';
+    this.name = ERR_NAME_EXECUTION;
     this.exitCode = exitCode;
     this.stderr = stderr;
   }
@@ -57,7 +66,7 @@ export class CliTimeoutError extends ClaudeConnectorError {
 
   constructor(timeoutMs: number) {
     super(`Claude Code CLI timed out after ${timeoutMs}ms`);
-    this.name = 'CliTimeoutError';
+    this.name = ERR_NAME_TIMEOUT;
     this.timeoutMs = timeoutMs;
   }
 }
@@ -70,7 +79,7 @@ export class ParseError extends ClaudeConnectorError {
 
   constructor(message: string, rawOutput: string) {
     super(message);
-    this.name = 'ParseError';
+    this.name = ERR_NAME_PARSE;
     this.rawOutput = rawOutput;
   }
 }
@@ -83,7 +92,7 @@ export class ValidationError extends ClaudeConnectorError {
 
   constructor(field: string, message: string) {
     super(`Invalid option '${field}': ${message}`);
-    this.name = 'ValidationError';
+    this.name = ERR_NAME_VALIDATION;
     this.field = field;
   }
 }

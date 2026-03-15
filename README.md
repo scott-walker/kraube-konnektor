@@ -22,6 +22,7 @@ Claude Code is a powerful AI coding agent, but it only runs in a terminal. **cla
 - **Two execution modes** — persistent SDK session (fast, default) or CLI process spawning (simple)
 - **Executor abstraction** — swap CLI for SDK or HTTP backend without changing your code
 - **Full CLI parity** — exposes all 45+ Claude Code flags through typed options
+- **Typed handles** — `StreamHandle` (fluent `.on().done()` + `for-await`) and `ChatHandle` (multi-turn conversations)
 
 ## Requirements
 
@@ -37,9 +38,9 @@ npm install @scottwalker/claude-connector
 ## Quick Start
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
 
-const claude = new Claude()
+const claude = new Claude({ permissionMode: PERMISSION_ACCEPT_EDITS })
 
 // Simple query
 const result = await claude.query('Find and fix bugs in auth.ts')
@@ -55,6 +56,8 @@ console.log(result.usage)       // { inputTokens, outputTokens }
 Point to a specific Claude Code installation when multiple versions coexist:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   executable: '/opt/claude-code/v2/bin/claude',
   cwd: '/path/to/project',
@@ -63,21 +66,41 @@ const claude = new Claude({
 
 ### Streaming
 
-Real-time output as Claude works:
+Real-time output as Claude works. `stream()` returns a `StreamHandle` — use the fluent `.on().done()` API or classic `for-await`:
 
 ```typescript
-for await (const event of claude.stream('Rewrite the auth module')) {
+import {
+  Claude,
+  EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR,
+} from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
+// Fluent API (.on / .done)
+const result = await claude
+  .stream('Rewrite the auth module')
+  .on(EVENT_TEXT, (e) => process.stdout.write(e.text))
+  .on(EVENT_TOOL_USE, (e) => console.log(`[Tool] ${e.toolName}`))
+  .on(EVENT_ERROR, (e) => console.error(e.message))
+  .done()
+
+console.log(`Done in ${result.durationMs}ms`)
+
+// Classic for-await
+const handle = claude.stream('Rewrite the auth module')
+
+for await (const event of handle) {
   switch (event.type) {
-    case 'text':
+    case EVENT_TEXT:
       process.stdout.write(event.text)
       break
-    case 'tool_use':
+    case EVENT_TOOL_USE:
       console.log(`[Tool] ${event.toolName}`)
       break
-    case 'result':
+    case EVENT_RESULT:
       console.log(`\nDone in ${event.durationMs}ms`)
       break
-    case 'error':
+    case EVENT_ERROR:
       console.error(event.message)
       break
   }
@@ -89,6 +112,9 @@ for await (const event of claude.stream('Rewrite the auth module')) {
 Maintain conversation context across queries:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const session = claude.session()
 await session.query('Analyze the architecture of this project')
 await session.query('Now refactor the auth module based on your analysis')
@@ -107,6 +133,9 @@ const s3 = claude.session({ resume: session.sessionId!, fork: true })
 Get typed JSON responses via JSON Schema:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const result = await claude.query('Extract all API endpoints from the codebase', {
   schema: {
     type: 'object',
@@ -134,10 +163,14 @@ console.log(result.structured)
 Run independent queries concurrently (each spawns a separate CLI process):
 
 ```typescript
+import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
 const [bugs, tests, docs] = await claude.parallel([
   { prompt: 'Find bugs in src/', options: { cwd: './src' } },
   { prompt: 'Run the test suite', options: { allowedTools: ['Bash'] } },
-  { prompt: 'Review documentation', options: { permissionMode: 'plan' } },
+  { prompt: 'Review documentation', options: { permissionMode: PERMISSION_PLAN } },
 ])
 ```
 
@@ -146,13 +179,16 @@ const [bugs, tests, docs] = await claude.parallel([
 Node.js-level equivalent of the `/loop` CLI command:
 
 ```typescript
+import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const job = claude.loop('5m', 'Check CI pipeline status and report failures')
 
-job.on('result', (result) => {
+job.on(SCHED_RESULT, (result) => {
   console.log(`[${new Date().toISOString()}] ${result.text}`)
 })
 
-job.on('error', (err) => {
+job.on(SCHED_ERROR, (err) => {
   console.error('Check failed:', err.message)
 })
 
@@ -167,6 +203,8 @@ Supported intervals: `'30s'`, `'5m'`, `'2h'`, `'1d'`, or raw milliseconds.
 Connect Model Context Protocol servers:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   // From config file
   mcpConfig: './mcp.json',
@@ -190,6 +228,8 @@ const claude = new Claude({
 Define specialized agents:
 
 ```typescript
+import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   agents: {
     reviewer: {
@@ -201,7 +241,7 @@ const claude = new Claude({
     deployer: {
       description: 'Deployment automation agent',
       tools: ['Bash', 'Read'],
-      permissionMode: 'acceptEdits',
+      permissionMode: PERMISSION_ACCEPT_EDITS,
     },
   },
 })
@@ -212,6 +252,9 @@ const claude = new Claude({
 Run operations in an isolated copy of the repository:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const result = await claude.query('Refactor the entire auth module', {
   worktree: 'refactor-auth',  // or `true` for auto-generated name
 })
@@ -223,7 +266,9 @@ Pass data alongside the prompt (like `echo data | claude -p "prompt"`):
 
 ```typescript
 import { readFileSync } from 'node:fs'
+import { Claude } from '@scottwalker/claude-connector'
 
+const claude = new Claude()
 const result = await claude.query('Analyze this error log and suggest fixes', {
   input: readFileSync('./error.log', 'utf-8'),
 })
@@ -234,6 +279,8 @@ const result = await claude.query('Analyze this error log and suggest fixes', {
 Attach hooks to tool execution:
 
 ```typescript
+import { Claude } from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   hooks: {
     PostToolUse: [
@@ -257,6 +304,11 @@ const claude = new Claude({
 All Claude Code CLI capabilities in one place:
 
 ```typescript
+import {
+  Claude,
+  EFFORT_HIGH, PERMISSION_ACCEPT_EDITS, PERMISSION_PLAN,
+} from '@scottwalker/claude-connector'
+
 const claude = new Claude({
   // CLI binary
   executable: '/usr/local/bin/claude',
@@ -264,11 +316,11 @@ const claude = new Claude({
 
   // Model
   model: 'opus',                      // 'opus' | 'sonnet' | 'haiku' | full model ID
-  effortLevel: 'high',                // 'low' | 'medium' | 'high' | 'max'
+  effortLevel: EFFORT_HIGH,           // EFFORT_LOW | EFFORT_MEDIUM | EFFORT_HIGH | EFFORT_MAX
   fallbackModel: 'sonnet',            // auto-fallback on failure
 
   // Permissions
-  permissionMode: 'acceptEdits',      // 'default' | 'acceptEdits' | 'plan' | 'auto' | 'dontAsk' | 'bypassPermissions'
+  permissionMode: PERMISSION_ACCEPT_EDITS,  // PERMISSION_DEFAULT | PERMISSION_ACCEPT_EDITS | PERMISSION_PLAN | PERMISSION_AUTO | PERMISSION_DONT_ASK | PERMISSION_BYPASS
   allowedTools: ['Read', 'Edit', 'Bash(npm run *)'],
   disallowedTools: ['WebFetch'],
 
@@ -306,7 +358,7 @@ const claude = new Claude({
 // Override any option per query
 const result = await claude.query('Analyze this module', {
   model: 'haiku',                     // cheaper model for this query
-  permissionMode: 'plan',             // read-only
+  permissionMode: PERMISSION_PLAN,    // read-only
   maxTurns: 3,
 })
 ```
@@ -325,6 +377,8 @@ import {
   ParseError,
   ValidationError,
 } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 
 try {
   const result = await claude.query('Fix the bug')
@@ -350,10 +404,13 @@ try {
 
 ## Custom Executor
 
-The `IExecutor` abstraction lets you swap the CLI backend for testing, mocking, or future SDK integration:
+The `IExecutor` abstraction lets you swap the CLI backend for testing, mocking, or alternative transports:
 
 ```typescript
-import { Claude, type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent } from '@scottwalker/claude-connector'
+import {
+  Claude, EVENT_TEXT, EVENT_RESULT,
+  type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent,
+} from '@scottwalker/claude-connector'
 
 class MockExecutor implements IExecutor {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {
@@ -370,9 +427,9 @@ class MockExecutor implements IExecutor {
   }
 
   async *stream(args: readonly string[], options: ExecuteOptions): AsyncIterable<StreamEvent> {
-    yield { type: 'text', text: 'Mocked stream' }
+    yield { type: EVENT_TEXT, text: 'Mocked stream' }
     yield {
-      type: 'result',
+      type: EVENT_RESULT,
       text: 'Mocked stream',
       sessionId: 'mock-session',
       usage: { inputTokens: 0, outputTokens: 0 },
@@ -438,7 +495,7 @@ cd claude-connector
 npm install
 
 npm run build              # compile TypeScript
-npm test                   # run 102 unit tests
+npm test                   # run 122 unit tests
 npm run test:integration   # build + run integration test
 npm run typecheck           # type-check without emitting
 ```

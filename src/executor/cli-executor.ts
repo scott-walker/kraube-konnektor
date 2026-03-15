@@ -4,12 +4,14 @@ import { parseStreamLine } from '../parser/stream-parser.js';
 import { CliExecutionError, CliNotFoundError, CliTimeoutError } from '../errors/errors.js';
 import type { QueryResult, StreamEvent } from '../types/index.js';
 import type { IExecutor, ExecuteOptions } from './interface.js';
-
-/**
- * Default timeout for CLI execution (10 minutes).
- * Long-running agentic tasks can exceed typical HTTP timeouts.
- */
-const DEFAULT_TIMEOUT_MS = 600_000;
+import {
+  DEFAULT_TIMEOUT_MS,
+  DEFAULT_EXECUTABLE,
+  ERR_ENOENT,
+  SIGNAL_SIGTERM,
+  EVENT_SYSTEM,
+  SYSTEM_STDERR,
+} from '../constants.js';
 
 /**
  * Executor implementation that spawns the Claude Code CLI as a child process.
@@ -36,7 +38,7 @@ export class CliExecutor implements IExecutor {
   private readonly timeoutMs: number;
   private activeProcess: ChildProcess | null = null;
 
-  constructor(executable: string = 'claude', timeoutMs: number = DEFAULT_TIMEOUT_MS) {
+  constructor(executable: string = DEFAULT_EXECUTABLE, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
     this.executable = executable;
     this.timeoutMs = timeoutMs;
   }
@@ -68,7 +70,7 @@ export class CliExecutor implements IExecutor {
 
   abort(): void {
     if (this.activeProcess && !this.activeProcess.killed) {
-      this.activeProcess.kill('SIGTERM');
+      this.activeProcess.kill(SIGNAL_SIGTERM);
       this.activeProcess = null;
     }
   }
@@ -92,7 +94,7 @@ export class CliExecutor implements IExecutor {
 
       return child;
     } catch (error: unknown) {
-      if (isNodeError(error) && error.code === 'ENOENT') {
+      if (isNodeError(error) && error.code === ERR_ENOENT) {
         throw new CliNotFoundError(this.executable);
       }
       throw error;
@@ -114,7 +116,7 @@ export class CliExecutor implements IExecutor {
       child.stderr!.on('data', (chunk: Buffer) => errChunks.push(chunk));
 
       const timer = setTimeout(() => {
-        child.kill('SIGTERM');
+        child.kill(SIGNAL_SIGTERM);
         reject(new CliTimeoutError(this.timeoutMs));
       }, this.timeoutMs);
 
@@ -122,7 +124,7 @@ export class CliExecutor implements IExecutor {
         clearTimeout(timer);
         this.activeProcess = null;
 
-        if (err.code === 'ENOENT') {
+        if (err.code === ERR_ENOENT) {
           reject(new CliNotFoundError(this.executable));
         } else {
           reject(err);
@@ -222,7 +224,7 @@ function createAsyncIterator<T>(
         // Capture stderr but don't fail — CLI may log warnings there
         const text = chunk.toString('utf-8').trim();
         if (text) {
-          push({ type: 'system', subtype: 'stderr', data: { text } } as T);
+          push({ type: EVENT_SYSTEM, subtype: SYSTEM_STDERR, data: { text } } as T);
         }
       });
 

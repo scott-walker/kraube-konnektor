@@ -13,7 +13,7 @@ new Claude(options?: ClientOptions, executor?: IExecutor)
 | Parameter  | Type            | Description                                      |
 |-----------|-----------------|--------------------------------------------------|
 | `options`  | `ClientOptions` | Client-level defaults (frozen after construction) |
-| `executor` | `IExecutor`     | Custom executor (default: `CliExecutor`)          |
+| `executor` | `IExecutor`     | Custom executor (default: `SdkExecutor`)          |
 
 ### Methods
 
@@ -22,28 +22,62 @@ new Claude(options?: ClientOptions, executor?: IExecutor)
 Execute a one-shot query and wait for the complete result.
 
 ```typescript
+import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const result = await claude.query('Find bugs in auth.ts', {
   model: 'opus',
   maxTurns: 5,
-  permissionMode: 'plan',
+  permissionMode: PERMISSION_PLAN,
 })
 console.log(result.text)
 console.log(result.usage)
 ```
 
-#### `stream(prompt, options?): AsyncIterable<StreamEvent>`
+#### `stream(prompt, options?): StreamHandle`
 
-Execute a query with real-time streaming output.
+Execute a query with real-time streaming output. Returns a `StreamHandle` with fluent callbacks, Node.js stream support, and backward-compatible async iteration.
 
 ```typescript
-for await (const event of claude.stream('Rewrite the module')) {
-  switch (event.type) {
-    case 'text':     process.stdout.write(event.text); break
-    case 'tool_use': console.log(`Tool: ${event.toolName}`); break
-    case 'result':   console.log(`Done in ${event.durationMs}ms`); break
-    case 'error':    console.error(event.message); break
-  }
-}
+import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
+
+// Fluent API
+const result = await claude.stream('Rewrite the module')
+  .on(EVENT_TEXT, (text) => process.stdout.write(text))
+  .on(EVENT_TOOL_USE, (event) => console.log(`Tool: ${event.toolName}`))
+  .on(EVENT_RESULT, (event) => console.log(`Done in ${event.durationMs}ms`))
+  .on(EVENT_ERROR, (event) => console.error(event.message))
+  .done()
+
+// Collect text
+const text = await claude.stream('Summarize').text()
+
+// Pipe to stdout
+const r = await claude.stream('Explain').pipe(process.stdout)
+
+// Node.js Readable
+claude.stream('Generate').toReadable().pipe(createWriteStream('out.txt'))
+
+// Async iteration (backward compat)
+for await (const event of claude.stream('Analyze')) { /* ... */ }
+```
+
+#### `chat(options?): ChatHandle`
+
+Open a bidirectional streaming channel — a persistent CLI process for multi-turn real-time conversation via `--input-format stream-json`.
+
+```typescript
+import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+
+const claude = new Claude({ useSdk: false })
+const chat = claude.chat()
+  .on(EVENT_TEXT, (text) => process.stdout.write(text))
+
+const r1 = await chat.send('What files are in src?')
+const r2 = await chat.send('Fix the largest file')
+chat.end()
 ```
 
 #### `session(options?): Session`
@@ -61,9 +95,12 @@ await session.query('Now refactor the auth module')  // remembers context
 Schedule a recurring query (equivalent of CLI `/loop`).
 
 ```typescript
+import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const job = claude.loop('5m', 'Check if deployment finished')
-job.on('result', (r) => console.log(r.text))
-job.on('error', (e) => console.error(e))
+job.on(SCHED_RESULT, (r) => console.log(r.text))
+job.on(SCHED_ERROR, (e) => console.error(e))
 job.stop()
 ```
 
@@ -72,15 +109,26 @@ job.stop()
 Run multiple independent queries concurrently.
 
 ```typescript
+import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+
+const claude = new Claude()
 const [bugs, docs] = await claude.parallel([
   { prompt: 'Find bugs', options: { cwd: './src' } },
-  { prompt: 'Check docs', options: { permissionMode: 'plan' } },
+  { prompt: 'Check docs', options: { permissionMode: PERMISSION_PLAN } },
 ])
 ```
+
+#### `init(): Promise<void>`
+
+Initialize the SDK session (warm up). Only needed when `useSdk: true` (default). In CLI mode this is a no-op.
 
 #### `abort(): void`
 
 Cancel the currently running execution.
+
+#### `close(): void`
+
+Close the SDK session and free resources.
 
 ---
 
@@ -88,27 +136,32 @@ Cancel the currently running execution.
 
 Options set at client construction time. Act as defaults for all queries.
 
-| Option                | Type                    | Description                                    |
-|-----------------------|-------------------------|------------------------------------------------|
-| `executable`          | `string`                | Path to CLI binary (default: `'claude'`)       |
-| `cwd`                 | `string`                | Working directory (default: `process.cwd()`)   |
+| Option                | Type                    | Description                                     |
+|-----------------------|-------------------------|-------------------------------------------------|
+| `useSdk`              | `boolean`               | Use Agent SDK (default: `true`) or CLI mode     |
+| `executable`          | `string`                | Path to CLI binary (default: `DEFAULT_EXECUTABLE`) |
+| `cwd`                 | `string`                | Working directory (default: `process.cwd()`)    |
 | `model`               | `string`                | Model: `'opus'`, `'sonnet'`, `'haiku'`, or full ID |
-| `effortLevel`         | `EffortLevel`           | `'low'` \| `'medium'` \| `'high'`             |
-| `fallbackModel`       | `string`                | Auto-fallback model on failure                 |
-| `permissionMode`      | `PermissionMode`        | Tool approval behavior                         |
-| `allowedTools`        | `string[]`              | Auto-approved tools (supports glob patterns)   |
-| `disallowedTools`     | `string[]`              | Always-denied tools                            |
-| `systemPrompt`        | `string`                | Replace entire system prompt                   |
-| `appendSystemPrompt`  | `string`                | Append to default system prompt                |
-| `maxTurns`            | `number`                | Max agentic turns per query                    |
-| `maxBudget`           | `number`                | Max spend in USD per query                     |
-| `additionalDirs`      | `string[]`              | Extra working directories                      |
-| `mcpConfig`           | `string \| string[]`    | Path(s) to MCP config files                    |
-| `mcpServers`          | `Record<string, McpServerConfig>` | Inline MCP server definitions      |
-| `agents`              | `Record<string, AgentConfig>`     | Custom subagent definitions        |
-| `hooks`               | `HooksConfig`           | Lifecycle hooks                                |
-| `env`                 | `Record<string, string>` | Extra environment variables                   |
-| `noSessionPersistence`| `boolean`               | Don't save sessions to disk                    |
+| `effortLevel`         | `EffortLevel`           | `EFFORT_LOW` \| `EFFORT_MEDIUM` \| `EFFORT_HIGH` \| `EFFORT_MAX` |
+| `fallbackModel`       | `string`                | Auto-fallback model on failure                  |
+| `permissionMode`      | `PermissionMode`        | Tool approval behavior                          |
+| `allowedTools`        | `string[]`              | Auto-approved tools (supports glob patterns)    |
+| `disallowedTools`     | `string[]`              | Always-denied tools                             |
+| `tools`               | `string[]`              | Restrict available built-in tools (`--tools`)   |
+| `systemPrompt`        | `string`                | Replace entire system prompt                    |
+| `appendSystemPrompt`  | `string`                | Append to default system prompt                 |
+| `maxTurns`            | `number`                | Max agentic turns per query                     |
+| `maxBudget`           | `number`                | Max spend in USD per query                      |
+| `additionalDirs`      | `string[]`              | Extra working directories                       |
+| `mcpConfig`           | `string \| string[]`    | Path(s) to MCP config files                     |
+| `mcpServers`          | `Record<string, McpServerConfig>` | Inline MCP server definitions       |
+| `agents`              | `Record<string, AgentConfig>`     | Custom subagent definitions         |
+| `agent`               | `string`                | Select preconfigured agent (`--agent`)          |
+| `hooks`               | `HooksConfig`           | Lifecycle hooks                                 |
+| `env`                 | `Record<string, string>` | Extra environment variables                    |
+| `noSessionPersistence`| `boolean`               | Don't save sessions to disk                     |
+| `name`                | `string`                | Display name for the session (`--name`)         |
+| `strictMcpConfig`     | `boolean`               | Ignore MCP servers not in `mcpConfig`           |
 
 ---
 
@@ -124,6 +177,7 @@ Per-query overrides. Any field set here takes precedence over `ClientOptions`.
 | `permissionMode`      | `PermissionMode`        | Override permission mode                       |
 | `allowedTools`        | `string[]`              | Override allowed tools                         |
 | `disallowedTools`     | `string[]`              | Override disallowed tools                      |
+| `tools`               | `string[]`              | Override available built-in tools              |
 | `systemPrompt`        | `string`                | Override system prompt                         |
 | `appendSystemPrompt`  | `string`                | Override appended system prompt                |
 | `maxTurns`            | `number`                | Override max turns                             |
@@ -133,6 +187,60 @@ Per-query overrides. Any field set here takes precedence over `ClientOptions`.
 | `worktree`            | `boolean \| string`     | Run in isolated git worktree                   |
 | `additionalDirs`      | `string[]`              | Override additional directories                |
 | `env`                 | `Record<string, string>` | Override environment variables                |
+| `agent`               | `string`                | Override agent for this query                  |
+
+---
+
+## StreamHandle
+
+Returned from `stream()` and `session.stream()`. Provides four ways to consume streaming output.
+
+### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `.on(type, callback)` | `this` | Register typed callback. Chainable. |
+| `.done()` | `Promise<StreamResultEvent>` | Consume stream, fire callbacks, return result. |
+| `.text()` | `Promise<string>` | Collect all text chunks into a string. |
+| `.pipe(writable)` | `Promise<StreamResultEvent>` | Pipe text to writable, return result. |
+| `.toReadable()` | `Readable` | Get Node.js Readable (text mode). |
+| `[Symbol.asyncIterator]` | `AsyncIterator<StreamEvent>` | Raw async iteration. |
+
+### Event callbacks
+
+| Event | Constant | Callback | Description |
+|-------|----------|----------|-------------|
+| `'text'` | `EVENT_TEXT` | `(text: string)` | Text chunk |
+| `'tool_use'` | `EVENT_TOOL_USE` | `(event: StreamToolUseEvent)` | Tool invocation |
+| `'result'` | `EVENT_RESULT` | `(event: StreamResultEvent)` | Final result |
+| `'error'` | `EVENT_ERROR` | `(event: StreamErrorEvent)` | Error |
+| `'system'` | `EVENT_SYSTEM` | `(event: StreamSystemEvent)` | System event |
+
+---
+
+## ChatHandle
+
+Returned from `chat()`. Bidirectional streaming over a persistent CLI process.
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `sessionId` | `string \| null` | Session ID (after first result) |
+| `turnCount` | `number` | Completed turns |
+| `closed` | `boolean` | Whether chat is closed |
+
+### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `.send(prompt)` | `Promise<StreamResultEvent>` | Send prompt, await turn completion. |
+| `.on(type, callback)` | `this` | Register callback (same events as StreamHandle). |
+| `.pipe(dest)` | `dest` | Pipe text to writable (returns dest for chaining). |
+| `.toReadable()` | `Readable` | Get Node.js Readable (text mode). |
+| `.toDuplex()` | `Duplex` | Get Node.js Duplex (write prompts, read text). |
+| `.end()` | `void` | Close gracefully (EOF to stdin). |
+| `.abort()` | `void` | Kill process immediately (SIGTERM). |
 
 ---
 
@@ -157,13 +265,13 @@ Returned from `query()`.
 
 Discriminated union yielded by `stream()`. Check `event.type` to narrow.
 
-| Type        | Fields                                        | When                      |
-|-------------|-----------------------------------------------|---------------------------|
-| `text`      | `text: string`                                | Text chunk received       |
-| `tool_use`  | `toolName: string`, `toolInput: object`       | Tool being invoked        |
-| `result`    | `text`, `sessionId`, `usage`, `cost`, `durationMs` | Query completed      |
-| `error`     | `message: string`, `code?: string`            | Error occurred            |
-| `system`    | `subtype: string`, `data: object`             | System/unknown event      |
+| Type | Constant | Fields | When |
+|------|----------|--------|------|
+| `'text'` | `EVENT_TEXT` | `text: string` | Text chunk received |
+| `'tool_use'` | `EVENT_TOOL_USE` | `toolName: string`, `toolInput: object` | Tool being invoked |
+| `'result'` | `EVENT_RESULT` | `text`, `sessionId`, `usage`, `cost`, `durationMs` | Query completed |
+| `'error'` | `EVENT_ERROR` | `message: string`, `code?: string` | Error occurred |
+| `'system'` | `EVENT_SYSTEM` | `subtype: string`, `data: object` | System/unknown event |
 
 ---
 
@@ -181,7 +289,7 @@ Multi-turn conversation wrapper. Created via `claude.session()`.
 ### Methods
 
 - `query(prompt, options?)` — Same as `claude.query()`, but continues the session
-- `stream(prompt, options?)` — Same as `claude.stream()`, but continues the session
+- `stream(prompt, options?)` — Returns `StreamHandle`, continues the session
 - `abort()` — Cancel the running query
 
 ### SessionOptions
@@ -214,10 +322,12 @@ Recurring query job. Created via `claude.loop()`.
 
 ### Events
 
-- `result` — `(result: QueryResult)` — Emitted after each successful query
-- `error` — `(error: Error)` — Emitted on query failure
-- `tick` — `(count: number)` — Emitted before each execution
-- `stop` — Emitted when stopped
+| Event | Constant | Callback | Description |
+|-------|----------|----------|-------------|
+| `'result'` | `SCHED_RESULT` | `(result: QueryResult)` | After each successful query |
+| `'error'` | `SCHED_ERROR` | `(error: Error)` | On query failure |
+| `'tick'` | `SCHED_TICK` | `(count: number)` | Before each execution |
+| `'stop'` | `SCHED_STOP` | `()` | When stopped |
 
 ### Interval format
 
@@ -228,6 +338,28 @@ Recurring query job. Created via `claude.loop()`.
 | Hours    | `'2h'`        | Every 2 hours       |
 | Days     | `'1d'`        | Every 24 hours      |
 | Raw ms   | `60000`       | Every 60 seconds    |
+
+---
+
+## Constants
+
+All string literals are exported as constants. Use them instead of raw strings.
+
+```typescript
+import {
+  // Event types
+  EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM,
+  // Permission modes
+  PERMISSION_DEFAULT, PERMISSION_ACCEPT_EDITS, PERMISSION_PLAN,
+  PERMISSION_AUTO, PERMISSION_DONT_ASK, PERMISSION_BYPASS,
+  // Effort levels
+  EFFORT_LOW, EFFORT_MEDIUM, EFFORT_HIGH, EFFORT_MAX,
+  // Scheduler events
+  SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP,
+  // Defaults
+  DEFAULT_EXECUTABLE, DEFAULT_MODEL, DEFAULT_TIMEOUT_MS,
+} from '@scottwalker/claude-connector'
+```
 
 ---
 
@@ -274,6 +406,7 @@ interface ExecuteOptions {
   cwd: string
   env: Record<string, string>
   input?: string
+  systemPrompt?: string
 }
 ```
 

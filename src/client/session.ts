@@ -3,6 +3,8 @@ import type { SessionOptions } from '../types/session.js';
 import type { IExecutor } from '../executor/interface.js';
 import { buildArgs, mergeOptions, resolveEnv } from '../builder/args-builder.js';
 import { validateQueryOptions, validatePrompt } from '../utils/validation.js';
+import { FORMAT_JSON, FORMAT_STREAM_JSON, EVENT_RESULT } from '../constants.js';
+import { StreamHandle } from './stream-handle.js';
 
 /**
  * A stateful conversation session.
@@ -75,11 +77,11 @@ export class Session {
     validatePrompt(prompt);
     if (options) validateQueryOptions(options);
 
-    const args = this.buildSessionArgs(prompt, 'json', options);
+    const args = this.buildSessionArgs(prompt, FORMAT_JSON, options);
     const env = resolveEnv(this.clientOptions, options);
     const resolved = mergeOptions(this.clientOptions, options, {
       prompt,
-      outputFormat: 'json',
+      outputFormat: FORMAT_JSON,
     });
 
     const result = await this.executor.execute(args, {
@@ -95,30 +97,36 @@ export class Session {
 
   /**
    * Send a query with streaming response within this session.
+   * Returns a {@link StreamHandle} with fluent callbacks and Node.js stream support.
    */
-  async *stream(prompt: string, options?: QueryOptions): AsyncIterable<StreamEvent> {
+  stream(prompt: string, options?: QueryOptions): StreamHandle {
     validatePrompt(prompt);
     if (options) validateQueryOptions(options);
 
-    const args = this.buildSessionArgs(prompt, 'stream-json', options);
+    const args = this.buildSessionArgs(prompt, FORMAT_STREAM_JSON, options);
     const env = resolveEnv(this.clientOptions, options);
     const resolved = mergeOptions(this.clientOptions, options, {
       prompt,
-      outputFormat: 'stream-json',
+      outputFormat: FORMAT_STREAM_JSON,
     });
 
-    for await (const event of this.executor.stream(args, {
+    const executor = this.executor;
+    const updateState = (id: string) => this.updateSessionState(id);
+    const execOpts = {
       cwd: resolved.cwd,
       env,
       input: options?.input,
       systemPrompt: resolved.systemPrompt,
-    })) {
-      // Capture session ID from result events
-      if (event.type === 'result' && event.sessionId) {
-        this.updateSessionState(event.sessionId);
+    };
+
+    return new StreamHandle(async function* () {
+      for await (const event of executor.stream(args, execOpts)) {
+        if (event.type === EVENT_RESULT && event.sessionId) {
+          updateState(event.sessionId);
+        }
+        yield event;
       }
-      yield event;
-    }
+    });
   }
 
   /**

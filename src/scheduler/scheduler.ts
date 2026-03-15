@@ -1,6 +1,13 @@
 import { EventEmitter } from 'node:events';
 import type { QueryOptions, QueryResult } from '../types/index.js';
 import { ValidationError } from '../errors/errors.js';
+import {
+  SCHED_RESULT,
+  SCHED_ERROR,
+  SCHED_TICK,
+  SCHED_STOP,
+  INTERVAL_MULTIPLIERS,
+} from '../constants.js';
 
 /**
  * Interval string parser.
@@ -17,14 +24,7 @@ function parseInterval(interval: string | number): number {
   const value = parseFloat(match[1]!);
   const unit = match[2]!.toLowerCase();
 
-  const multipliers: Record<string, number> = {
-    s: 1_000,
-    m: 60_000,
-    h: 3_600_000,
-    d: 86_400_000,
-  };
-
-  return Math.round(value * multipliers[unit]!);
+  return Math.round(value * INTERVAL_MULTIPLIERS[unit]!);
 }
 
 /**
@@ -120,22 +120,22 @@ export class ScheduledJob extends EventEmitter<ScheduledJobEvents> {
       clearInterval(this.timer);
       this.timer = null;
     }
-    this.emit('stop');
+    this.emit(SCHED_STOP);
   }
 
   private async tick(): Promise<void> {
     this._running = true;
     this._tickCount++;
-    this.emit('tick', this._tickCount);
+    this.emit(SCHED_TICK, this._tickCount);
 
     try {
       const result = await this.queryFn(this.prompt, this.options);
       if (!this._stopped) {
-        this.emit('result', result);
+        this.emit(SCHED_RESULT, result);
       }
     } catch (error) {
       if (!this._stopped) {
-        this.emit('error', error instanceof Error ? error : new Error(String(error)));
+        this.emit(SCHED_ERROR, error instanceof Error ? error : new Error(String(error)));
       }
     } finally {
       this._running = false;

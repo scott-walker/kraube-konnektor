@@ -8,7 +8,7 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │                        Consumer Code                             │
 │                                                                  │
-│  const claude = new Claude({ executable: '/usr/bin/claude' })    │
+│  const claude = new Claude({ model: 'sonnet' })                  │
 │  const result = await claude.query('Fix the bug')                │
 └──────────────────┬───────────────────────────────────────────────┘
                    │
@@ -17,7 +17,8 @@
 │                     Claude (Facade)                              │
 │                                                                  │
 │  Orchestrates all components. Validates input. Merges options.   │
-│  Delegates execution. Exposes: query, stream, session, loop.     │
+│  Delegates execution.                                            │
+│  Exposes: query, stream, chat, session, loop, parallel.          │
 └──────┬────────────────────┬──────────────────────┬───────────────┘
        │                    │                      │
        ▼                    ▼                      ▼
@@ -26,21 +27,28 @@
 │             │    │  (interface) │    │                    │
 │ Converts    │    │              │    │ Multi-turn state   │
 │ options →   │    │  ┌────────┐  │    │ management via     │
-│ CLI args    │    │  │  CLI   │  │    │ --resume/--continue│
-│             │    │  │Executor│  │    │                    │
-└─────────────┘    │  └────────┘  │    └────────────────────┘
-                   │  ┌────────┐  │
-                   │  │ Future │  │
-                   │  │Executor│  │
-                   │  └────────┘  │
-                   └──────┬───────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │   CLI Process         │
-              │   claude -p "..."     │
-              │   --output-format json│
-              └───────────────────────┘
+│ CLI args    │    │  │  SDK   │  │    │ --resume/--continue│
+│ (constants) │    │  │Executor│  │    │                    │
+│             │    │  └────────┘  │    │ Returns StreamHandle│
+└─────────────┘    │  ┌────────┐  │    └────────────────────┘
+                   │  │  CLI   │  │
+                   │  │Executor│  │    ┌────────────────────┐
+                   │  └────────┘  │    │   StreamHandle     │
+                   └──────┬───────┘    │   (Readable)       │
+                          │            │                    │
+                          │            │   .on() .done()    │
+                          ▼            │   .text() .pipe()  │
+              ┌───────────────────┐    │   .toReadable()    │
+              │   CLI Process     │    └────────────────────┘
+              │   claude -p "..." │
+              │   --output-format │    ┌────────────────────┐
+              │   stream-json     │    │   ChatHandle       │
+              └───────────────────┘    │   (Duplex)         │
+                                       │                    │
+                                       │   .send() .pipe()  │
+                                       │   .toReadable()    │
+                                       │   .toDuplex()      │
+                                       └────────────────────┘
 ```
 
 ## Design Principles
@@ -49,51 +57,56 @@
 
 **Single Responsibility**:
 - `Claude` — facade, delegates everything
-- `ArgsBuilder` — only converts options to CLI args
+- `ArgsBuilder` — only converts options to CLI args (using constants from `constants.ts`)
+- `SdkExecutor` — manages persistent SDK sessions (default)
 - `CliExecutor` — only spawns and manages CLI processes
 - `Session` — only tracks session state
+- `StreamHandle` — fluent streaming API + Node.js Readable bridge
+- `ChatHandle` — bidirectional streaming + Node.js Duplex bridge
 - `Scheduler` — only manages recurring execution
 - Parsers — only parse CLI output
 
 **Open/Closed**:
-- New execution backends (SDK, HTTP) are added by implementing `IExecutor` — no changes to existing code.
+- New execution backends are added by implementing `IExecutor` — no changes to existing code.
 - New CLI flags are added to `ArgsBuilder` — parsers and executor remain unchanged.
+- New stream consumers are added via `StreamHandle.on()` — no core changes needed.
 
 **Liskov Substitution**:
-- Any `IExecutor` implementation can replace `CliExecutor` without breaking the client.
+- Any `IExecutor` implementation can replace `SdkExecutor`/`CliExecutor` without breaking the client.
 
 **Interface Segregation**:
 - `IExecutor` has only 3 methods: `execute`, `stream`, `abort`.
 - Types are split into focused files: `client.ts`, `result.ts`, `session.ts`.
 
 **Dependency Inversion**:
-- `Claude` depends on `IExecutor` (abstraction), not `CliExecutor` (implementation).
+- `Claude` depends on `IExecutor` (abstraction), not `SdkExecutor` (implementation).
 - Constructor injection: `new Claude(options, customExecutor)`.
 
-### 2. KISS
+### 2. No Magic Strings
 
-- No frameworks. Only Node.js built-ins (`child_process`, `events`).
-- Zero runtime dependencies.
-- Each module does one thing and is small enough to read in a single sitting.
+All string literals (event types, CLI flags, permission modes, etc.) are centralized in `constants.ts`. Source files import named constants — no hardcoded strings anywhere in the codebase.
 
 ### 3. DRY
 
 - Option merging logic is centralized in `mergeOptions()`.
-- Validation is centralized in `utils/validation.ts`.
+- Validation is centralized in `utils/validation.ts`, referencing `VALID_PERMISSION_MODES` and `VALID_EFFORT_LEVELS` from constants.
 - Error hierarchy has a single base class.
+- Event dispatching logic is shared between `StreamHandle` and `ChatHandle`.
 
 ## Layer Map
 
 ```
 src/
+├── constants.ts          All string constants (events, flags, keys, modes)
 ├── index.ts              Public API surface (re-exports)
 ├── types/                Type definitions (no runtime code)
-│   ├── client.ts         ClientOptions, QueryOptions
-│   ├── result.ts         QueryResult, StreamEvent
+│   ├── client.ts         ClientOptions, QueryOptions, PermissionMode, EffortLevel
+│   ├── result.ts         QueryResult, StreamEvent, TokenUsage, Message
 │   └── session.ts        SessionOptions, SessionInfo
 ├── executor/             Execution abstraction
-│   ├── interface.ts      IExecutor (the core abstraction)
-│   └── cli-executor.ts   CLI implementation (spawn)
+│   ├── interface.ts      IExecutor, ExecuteOptions
+│   ├── sdk-executor.ts   SDK implementation (persistent session, default)
+│   └── cli-executor.ts   CLI implementation (spawn per query)
 ├── builder/              Options → CLI args
 │   └── args-builder.ts   buildArgs(), mergeOptions(), resolveEnv()
 ├── parser/               CLI output → typed objects
@@ -101,7 +114,9 @@ src/
 │   └── stream-parser.ts  NDJSON stream parsing
 ├── client/               High-level API
 │   ├── claude.ts         Claude class (facade)
-│   └── session.ts        Session class (stateful wrapper)
+│   ├── session.ts        Session class (stateful wrapper)
+│   ├── stream-handle.ts  StreamHandle (fluent API + Node.js Readable)
+│   └── chat-handle.ts    ChatHandle (bidirectional + Node.js Duplex)
 ├── scheduler/            Recurring execution (/loop equivalent)
 │   └── scheduler.ts      Scheduler, ScheduledJob
 ├── errors/               Error hierarchy
@@ -116,7 +131,7 @@ src/
 
 The central abstraction that decouples the public API from the transport mechanism.
 
-**Why it exists**: Today, the only way to interact with Claude Code programmatically (on a subscription) is via the CLI. Tomorrow, Anthropic may ship a native SDK, a Unix socket, or an HTTP API. By coding against `IExecutor`, only a new implementation is needed — the entire public surface remains stable.
+**Why it exists**: Today there are two executors — `SdkExecutor` (persistent SDK session, default) and `CliExecutor` (spawns `claude -p` per query). Tomorrow, Anthropic may ship an HTTP API or Unix socket interface. By coding against `IExecutor`, only a new implementation is needed.
 
 **Contract**:
 - `execute(args, options)` → `Promise<QueryResult>` (run to completion)
@@ -124,33 +139,30 @@ The central abstraction that decouples the public API from the transport mechani
 - `abort()` → `void` (cancel running execution)
 
 **Invariants**:
-- Stateless per invocation (safe for concurrent use)
 - Error conditions throw `ClaudeConnectorError` subclasses
 - Arguments are fully resolved (no option merging in the executor)
+
+### StreamHandle (client/stream-handle.ts)
+
+Wraps an `AsyncIterable<StreamEvent>` with a fluent API and Node.js stream bridge.
+
+**Why it exists**: Raw `for await` loops require boilerplate for common patterns (collect text, pipe to stdout, track progress). `StreamHandle` provides `.on().done()`, `.text()`, `.pipe()`, and `.toReadable()` for these cases, while preserving `for await` backward compatibility.
+
+### ChatHandle (client/chat-handle.ts)
+
+Manages a persistent CLI process with `--input-format stream-json` for bidirectional streaming.
+
+**Why it exists**: One-shot `stream()` spawns a process per query. For multi-turn conversations where latency matters, `ChatHandle` keeps one process alive and sends messages via stdin. It provides `.send()` (Promise-based), `.toDuplex()` (Node.js Duplex), and the same `.on()` fluent API as `StreamHandle`.
 
 ### ArgsBuilder (builder/args-builder.ts)
 
 Purely functional module that converts typed options into CLI argument arrays.
 
-**Why it's separate**: Argument building is a distinct concern from execution. Keeping it separate means:
-- It's trivially unit-testable (input → output, no side effects)
-- When CLI flags change, only this module needs updating
-- The executor doesn't need to know about option semantics
+**Why it's separate**: Argument building is a distinct concern from execution. All CLI flag strings come from `constants.ts` — no hardcoded flags in the builder.
 
-### Claude (client/claude.ts)
+### Constants (constants.ts)
 
-The facade that ties everything together. Consumers interact with this class only.
-
-**Responsibilities**:
-- Validate inputs
-- Merge client-level defaults with per-query overrides
-- Delegate to ArgsBuilder and Executor
-- Create sessions and scheduled jobs
-
-**What it does NOT do**:
-- Parse CLI output (that's the parser's job)
-- Manage child processes (that's the executor's job)
-- Track session state (that's the Session's job)
+Single source of truth for all string literals: event types, CLI flags, JSON protocol keys, permission modes, effort levels, error names, etc. Every module imports from here — zero magic strings in the codebase.
 
 ## Data Flow
 
@@ -160,13 +172,13 @@ The facade that ties everything together. Consumers interact with this class onl
 claude.query('Find bugs', { model: 'opus' })
   │
   ├─ validate prompt & options
-  ├─ mergeOptions(clientOpts, queryOpts, { outputFormat: 'json' })
-  ├─ buildArgs(resolvedOptions) → ['--print', '--output-format', 'json', ...]
-  ├─ resolveEnv(clientOpts, queryOpts) → { CLAUDE_CODE_EFFORT_LEVEL: 'high' }
+  ├─ mergeOptions(clientOpts, queryOpts, { outputFormat: FORMAT_JSON })
+  ├─ buildArgs(resolvedOptions) → [FLAG_PRINT, FLAG_OUTPUT_FORMAT, FORMAT_JSON, ...]
+  ├─ resolveEnv(clientOpts, queryOpts)
   │
-  └─ executor.execute(args, { cwd, env, input })
+  └─ executor.execute(args, { cwd, env, input, systemPrompt })
        │
-       ├─ spawn('claude', args)
+       ├─ spawn(DEFAULT_EXECUTABLE, args)  or  session.send(prompt)
        ├─ collect stdout
        ├─ wait for exit
        │
@@ -178,82 +190,78 @@ claude.query('Find bugs', { model: 'opus' })
 ```
 claude.stream('Rewrite module')
   │
-  ├─ validate & merge (same as above, but outputFormat: 'stream-json')
+  ├─ validate & merge (outputFormat: FORMAT_STREAM_JSON)
   │
-  └─ executor.stream(args, options)
+  └─ new StreamHandle(() => executor.stream(args, options))
        │
-       ├─ spawn('claude', args)
-       ├─ read stdout line-by-line (NDJSON)
+       ├─ .on(EVENT_TEXT, cb)     → register callback
+       ├─ .on(EVENT_TOOL_USE, cb) → register callback
+       ├─ .done()                 → consume iterable, dispatch events
+       │     │
+       │     └─ for each NDJSON line:
+       │          parseStreamLine(line) → StreamEvent
+       │          dispatch to registered callbacks
        │
-       └─ for each line:
-            parseStreamLine(line) → StreamEvent
-            yield event
+       ├─ .text()                 → collect text, return string
+       ├─ .pipe(writable)         → pipe text, return result
+       └─ .toReadable()           → Node.js Readable (text mode)
 ```
 
-### session.query() — Multi-turn
+### chat() — Bidirectional streaming
 
 ```
-session.query('Analyze architecture')
+claude.chat()
   │
-  ├─ queryCount === 0?
-  │    ├─ YES: use --continue (if sessionOptions.continue)
-  │    └─ NO:  use --resume <sessionId>
+  ├─ buildArgs({ inputFormat: FORMAT_STREAM_JSON, ... })
   │
-  ├─ buildArgs with session flags
-  ├─ executor.execute(...)
-  │
-  └─ updateSessionState(result.sessionId)
-       └─ store sessionId for next query
+  └─ new ChatHandle(executable, args, { cwd, env })
+       │
+       ├─ spawn process with stdin open
+       ├─ .send(prompt) → write JSON to stdin, await result
+       ├─ stdout → parseStreamLine → dispatch to callbacks
+       ├─ .toDuplex() → Node.js Duplex (write prompts, read text)
+       └─ .end() → close stdin → process exits
 ```
 
 ## Error Handling Strategy
 
 ```
 ClaudeConnectorError          Base class (catch-all)
-├── CliNotFoundError          Binary not found (ENOENT)
+├── CliNotFoundError          Binary not found (ERR_ENOENT)
 ├── CliExecutionError         Non-zero exit code
-├── CliTimeoutError           Process exceeded timeout
+├── CliTimeoutError           Process exceeded DEFAULT_TIMEOUT_MS
 ├── ParseError                Unexpected CLI output format
 └── ValidationError           Invalid options/input
 ```
 
-**Philosophy**: Fail fast with descriptive messages. Each error class carries contextual data (exit code, stderr, raw output) for debugging.
+**Philosophy**: Fail fast with descriptive messages. Each error class carries contextual data (exit code, stderr, raw output) for debugging. Error class names use constants from `ERR_NAME_*`.
 
 ## Testing Strategy
 
 - **Unit tests**: Every module is tested in isolation using mock executors.
-- **No real CLI calls in tests**: `IExecutor` is mocked, so tests run instantly and don't require Claude Code installed.
+- **No real CLI calls in tests**: `IExecutor` is mocked, so tests run instantly.
 - **Parser tests**: Cover both happy paths and edge cases (missing fields, malformed JSON).
 - **Session tests**: Verify state management (session ID tracking, query counting, flag selection).
+- **StreamHandle tests**: Verify `.on()`, `.done()`, `.text()`, `.pipe()`, `.toReadable()`, and `for await`.
+- **ChatHandle tests**: Verify lifecycle (properties, close, abort, send-after-close).
 - **Scheduler tests**: Use `vi.useFakeTimers()` for deterministic timing.
+- **122 tests** across 10 test files.
 
 ## Future Extensibility
 
-### Adding a new executor (e.g., SDK-based)
-
-```typescript
-import type { IExecutor } from '@scottwalker/claude-connector'
-
-class SdkExecutor implements IExecutor {
-  async execute(args, options) { /* use SDK directly */ }
-  async *stream(args, options) { /* use SDK streaming */ }
-  abort() { /* cancel SDK call */ }
-}
-
-const claude = new Claude({ model: 'opus' }, new SdkExecutor())
-// Everything else works exactly the same
-```
-
 ### Adding new CLI flags
 
-1. Add the option to `ClientOptions` and/or `QueryOptions` in `types/client.ts`
-2. Add merging logic in `mergeOptions()` in `builder/args-builder.ts`
-3. Add argument building in `buildArgs()` in `builder/args-builder.ts`
-4. Add tests
-5. No changes needed in executor, parser, or client classes
+1. Add the constant to `constants.ts`
+2. Add the option to `ClientOptions` and/or `QueryOptions` in `types/client.ts`
+3. Add merging logic in `mergeOptions()` in `builder/args-builder.ts`
+4. Add argument building in `buildArgs()` using the constant
+5. Add tests
+6. No changes needed in executor, parser, or client classes
 
 ### Adding new stream event types
 
-1. Add the type to the `StreamEvent` union in `types/result.ts`
-2. Add parsing logic in `stream-parser.ts`
-3. Unknown types are already forwarded as `system` events, so existing code won't break
+1. Add the constant to `constants.ts`
+2. Add the type to the `StreamEvent` union in `types/result.ts`
+3. Add parsing logic in `stream-parser.ts`
+4. Add dispatch case in `StreamHandle` and `ChatHandle`
+5. Unknown types are already forwarded as `EVENT_SYSTEM` events, so existing code won't break

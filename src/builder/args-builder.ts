@@ -1,4 +1,15 @@
 import type { ClientOptions, QueryOptions } from '../types/index.js';
+import {
+  FLAG_PRINT, FLAG_OUTPUT_FORMAT, FLAG_VERBOSE, FLAG_INPUT_FORMAT,
+  FLAG_CONTINUE, FLAG_RESUME, FLAG_FORK_SESSION, FLAG_MODEL,
+  FLAG_FALLBACK_MODEL, FLAG_EFFORT, FLAG_PERMISSION_MODE,
+  FLAG_ALLOWED_TOOLS, FLAG_DISALLOWED_TOOLS, FLAG_TOOLS,
+  FLAG_SYSTEM_PROMPT, FLAG_APPEND_SYSTEM_PROMPT, FLAG_MAX_TURNS,
+  FLAG_MAX_BUDGET, FLAG_ADD_DIR, FLAG_MCP_CONFIG, FLAG_STRICT_MCP_CONFIG,
+  FLAG_AGENTS, FLAG_AGENT, FLAG_JSON_SCHEMA, FLAG_WORKTREE,
+  FLAG_NO_SESSION_PERSISTENCE, FLAG_NAME, FLAG_SETTINGS,
+  FORMAT_JSON, FORMAT_STREAM_JSON,
+} from '../constants.js';
 
 /**
  * Builds the CLI argument array from merged client + query options.
@@ -18,8 +29,9 @@ import type { ClientOptions, QueryOptions } from '../types/index.js';
 
 /** Merged options ready for argument building. */
 export interface ResolvedOptions {
-  readonly prompt: string;
+  readonly prompt?: string;
   readonly outputFormat: 'json' | 'stream-json';
+  readonly inputFormat?: 'stream-json';
   readonly cwd: string;
   readonly model?: string;
   readonly effortLevel?: string;
@@ -100,78 +112,85 @@ export function mergeOptions(
  * @returns Array of strings to pass to `spawn('claude', args)`.
  */
 export function buildArgs(options: ResolvedOptions): string[] {
-  const args: string[] = ['--print', '--output-format', options.outputFormat];
+  const args: string[] = [FLAG_PRINT, FLAG_OUTPUT_FORMAT, options.outputFormat];
 
   // BUG-1 fix: stream-json requires --verbose
-  if (options.outputFormat === 'stream-json') {
-    args.push('--verbose');
+  if (options.outputFormat === FORMAT_STREAM_JSON) {
+    args.push(FLAG_VERBOSE);
+  }
+
+  // ── Input format (bidirectional streaming) ─────────────────────
+  if (options.inputFormat) {
+    args.push(FLAG_INPUT_FORMAT, options.inputFormat);
   }
 
   // ── Prompt ──────────────────────────────────────────────────────
-  args.push(options.prompt);
+  if (options.prompt) {
+    args.push(options.prompt);
+  }
 
   // ── Session ─────────────────────────────────────────────────────
   if (options.continueSession) {
-    args.push('--continue');
+    args.push(FLAG_CONTINUE);
   }
   if (options.sessionId) {
-    args.push('--resume', options.sessionId);
+    args.push(FLAG_RESUME, options.sessionId);
   }
   if (options.forkSession) {
-    args.push('--fork-session');
+    args.push(FLAG_FORK_SESSION);
   }
 
   // ── Model ───────────────────────────────────────────────────────
   if (options.model) {
-    args.push('--model', options.model);
+    args.push(FLAG_MODEL, options.model);
   }
   if (options.fallbackModel) {
-    args.push('--fallback-model', options.fallbackModel);
+    args.push(FLAG_FALLBACK_MODEL, options.fallbackModel);
   }
   if (options.effortLevel) {
-    args.push('--effort', options.effortLevel);
+    args.push(FLAG_EFFORT, options.effortLevel);
   }
 
   // ── Permissions ─────────────────────────────────────────────────
   if (options.permissionMode) {
-    args.push('--permission-mode', options.permissionMode);
+    args.push(FLAG_PERMISSION_MODE, options.permissionMode);
   }
   if (options.allowedTools?.length) {
-    args.push('--allowedTools', ...options.allowedTools);
+    args.push(FLAG_ALLOWED_TOOLS, ...options.allowedTools);
   }
   if (options.disallowedTools?.length) {
-    args.push('--disallowedTools', ...options.disallowedTools);
+    args.push(FLAG_DISALLOWED_TOOLS, ...options.disallowedTools);
   }
 
   // ── Tools (built-in set restriction) ────────────────────────────
   if (options.tools) {
     if (options.tools.length === 0) {
-      args.push('--tools', '');
+      args.push(FLAG_TOOLS, '');
     } else {
-      args.push('--tools', ...options.tools);
+      args.push(FLAG_TOOLS, ...options.tools);
     }
   }
 
   // ── System prompt ───────────────────────────────────────────────
   if (options.systemPrompt) {
-    args.push('--system-prompt', options.systemPrompt);
+    args.push(FLAG_SYSTEM_PROMPT, options.systemPrompt);
   }
   if (options.appendSystemPrompt) {
-    args.push('--append-system-prompt', options.appendSystemPrompt);
+    args.push(FLAG_APPEND_SYSTEM_PROMPT, options.appendSystemPrompt);
   }
 
   // ── Limits ──────────────────────────────────────────────────────
   if (options.maxTurns !== undefined) {
-    args.push('--max-turns', String(options.maxTurns));
+    args.push(FLAG_MAX_TURNS, String(options.maxTurns));
   }
   if (options.maxBudget !== undefined) {
-    args.push('--max-budget-usd', String(options.maxBudget));
+    args.push(FLAG_MAX_BUDGET, String(options.maxBudget));
   }
 
   // ── Directories ─────────────────────────────────────────────────
   if (options.additionalDirs?.length) {
     for (const dir of options.additionalDirs) {
-      args.push('--add-dir', dir);
+      args.push(FLAG_ADD_DIR, dir);
     }
   }
 
@@ -179,49 +198,49 @@ export function buildArgs(options: ResolvedOptions): string[] {
   if (options.mcpConfig) {
     const configs = Array.isArray(options.mcpConfig) ? options.mcpConfig : [options.mcpConfig];
     for (const cfg of configs) {
-      args.push('--mcp-config', cfg);
+      args.push(FLAG_MCP_CONFIG, cfg);
     }
   }
   if (options.mcpServers && Object.keys(options.mcpServers).length > 0) {
-    args.push('--mcp-config', JSON.stringify({ mcpServers: options.mcpServers }));
+    args.push(FLAG_MCP_CONFIG, JSON.stringify({ mcpServers: options.mcpServers }));
   }
   if (options.strictMcpConfig) {
-    args.push('--strict-mcp-config');
+    args.push(FLAG_STRICT_MCP_CONFIG);
   }
 
   // ── Agents ──────────────────────────────────────────────────────
   if (options.agents && Object.keys(options.agents).length > 0) {
-    args.push('--agents', JSON.stringify(options.agents));
+    args.push(FLAG_AGENTS, JSON.stringify(options.agents));
   }
   if (options.agent) {
-    args.push('--agent', options.agent);
+    args.push(FLAG_AGENT, options.agent);
   }
 
   // ── Structured output ───────────────────────────────────────────
   if (options.schema) {
-    args.push('--json-schema', JSON.stringify(options.schema));
+    args.push(FLAG_JSON_SCHEMA, JSON.stringify(options.schema));
   }
 
   // ── Worktree ────────────────────────────────────────────────────
   if (options.worktree) {
     if (typeof options.worktree === 'string') {
-      args.push('--worktree', options.worktree);
+      args.push(FLAG_WORKTREE, options.worktree);
     } else {
-      args.push('--worktree');
+      args.push(FLAG_WORKTREE);
     }
   }
 
   // ── Misc ────────────────────────────────────────────────────────
   if (options.noSessionPersistence) {
-    args.push('--no-session-persistence');
+    args.push(FLAG_NO_SESSION_PERSISTENCE);
   }
   if (options.name) {
-    args.push('--name', options.name);
+    args.push(FLAG_NAME, options.name);
   }
 
   // ── Hooks (via --settings) ──────────────────────────────────────
   if (options.hooks && Object.keys(options.hooks).length > 0) {
-    args.push('--settings', JSON.stringify({ hooks: options.hooks }));
+    args.push(FLAG_SETTINGS, JSON.stringify({ hooks: options.hooks }));
   }
 
   return args;
