@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
+      - 'landing/**'
       - 'wiki/**'
   workflow_dispatch:
 
@@ -34,13 +34,13 @@ jobs:
       - run: npm run wiki:build
 
       # Assemble final site:
-      # / → landing (docs/landing.html → index.html + assets)
+      # / → landing (index.html + assets)
       # /wiki/ → VitePress output
       - name: Assemble site
         run: |
           mkdir -p site/wiki
-          cp docs/index.html site/index.html
-          cp -r docs/assets site/assets
+          cp landing/index.html site/index.html
+          cp -r landing/assets site/assets
           cp -r wiki/.vitepress/dist/* site/wiki/
 
       - uses: actions/upload-pages-artifact@v3

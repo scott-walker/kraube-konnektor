@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-03-16
+
+### Added
+
+- **SDK near-parity** — 95% coverage of `@anthropic-ai/claude-agent-sdk` Options and Query API
+- **SdkExecutor V1 migration** — stable V1 `query()` API with full control methods (was unstable V2)
+- **`canUseTool` callback** — programmatic permission control with access to tool name, arguments, and abort signal
+- **In-process MCP tools** — `createSdkMcpServer()` and `sdkTool()` for custom tools without external processes
+- **JS hook callbacks** — `hookCallbacks` option with all 21 event types
+- **Thinking config** — `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens }`, `{ type: 'disabled' }`
+- **13 runtime control methods** — `setModel()`, `setPermissionMode()`, `rewindFiles()`, `stopTask()`, `setMcpServers()`, `reconnectMcpServer()`, `toggleMcpServer()`, `accountInfo()`, `supportedModels()`, `supportedCommands()`, `supportedAgents()`, `mcpServerStatus()`, `interrupt()`
+- **Per-query abort** — `signal: AbortSignal` on `QueryOptions`
+- **Task stream events** — `task_started`, `task_progress`, `task_notification`
+- **New options** — `settingSources`, `settings`, `plugins`, `spawnClaudeCodeProcess`, `stderr`, `allowDangerouslySkipPermissions`, `betas`, `onElicitation`, `enableFileCheckpointing`
+- **Session utilities** — `listSessions()`, `getSessionMessages()`
+- 200 tests (was 122)
+
+### Changed
+
+- SdkExecutor uses V1 `query()` API instead of V2 `unstable_v2_createSession()`
+- Manual `.next()` iteration via `readUntilResult()` to prevent generator closure
+- `StreamEvent` union expanded with task event types
+- Landing page moved from `docs/` to `landing/`
+
 ## [0.3.0] - 2026-03-15
 
 ### Added
