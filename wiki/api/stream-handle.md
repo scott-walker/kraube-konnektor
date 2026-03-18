@@ -98,13 +98,13 @@ import {
 const claude = new Claude()
 const result = await claude.stream('Run all agents on this codebase')
   .on(EVENT_TASK_STARTED, (event) => {
-    console.log(`Task ${event.taskId} started (agent: ${event.agentName})`)
+    console.log(`Task ${event.taskId} started: ${event.description}`)
   })
   .on(EVENT_TASK_PROGRESS, (event) => {
-    console.log(`Task ${event.taskId}: ${event.message}`)
+    console.log(`Task ${event.taskId}: ${event.description}`)
   })
   .on(EVENT_TASK_NOTIFICATION, (event) => {
-    console.log(`Task ${event.taskId} [${event.status}]: ${event.message}`)
+    console.log(`Task ${event.taskId} [${event.status}]: ${event.summary}`)
   })
   .done()
 ```

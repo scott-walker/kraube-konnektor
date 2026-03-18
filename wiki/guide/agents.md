@@ -126,13 +126,13 @@ const claude = new Claude({
 
 const result = await claude.stream('Review and fix the auth module', { agent: 'reviewer' })
   .on(EVENT_TASK_STARTED, (event) => {
-    console.log(`[${event.agentName}] Task ${event.taskId} started`)
+    console.log(`[${event.taskType}] Task ${event.taskId} started`)
   })
   .on(EVENT_TASK_PROGRESS, (event) => {
-    console.log(`[Task ${event.taskId}] ${event.message}`)
+    console.log(`[Task ${event.taskId}] ${event.description}`)
   })
   .on(EVENT_TASK_NOTIFICATION, (event) => {
-    console.log(`[Task ${event.taskId}] ${event.status}: ${event.message}`)
+    console.log(`[Task ${event.taskId}] ${event.status}: ${event.summary}`)
   })
   .done()
 ```

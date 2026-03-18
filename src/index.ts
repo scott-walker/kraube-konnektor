@@ -227,10 +227,10 @@ export async function createSdkMcpServer(options: {
  *
  * @example
  * ```ts
- * import { tool } from '@scottwalker/claude-connector'
+ * import { sdkTool } from '@scottwalker/claude-connector'
  * import { z } from 'zod/v4'
  *
- * const myTool = tool('greet', 'Say hello', { name: z.string() },
+ * const myTool = await sdkTool('greet', 'Say hello', { name: z.string() },
  *   async ({ name }) => ({ content: [{ type: 'text', text: `Hello ${name}!` }] })
  * )
  * ```

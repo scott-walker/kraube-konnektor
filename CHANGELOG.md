@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6] - 2026-03-18
+
+### Fixed
+
+- **README examples** — fixed 7 incorrect code examples (canUseTool, hookCallbacks, createSdkMcpServer, plugins, spawnClaudeCodeProcess, session utilities, mcpConfig)
+- **Documentation** — added per-query option mode support column in API.md (CLI only vs Both)
+- **Wiki** — fixed `event.agentName` and `event.message` references in task event examples (fields don't exist)
+- **Landing page** — updated version, test count, and package size
+
+## [0.4.5] - 2026-03-18
+
+### Added
+
+- **Rate limit events** — new `StreamRateLimitEvent` with status, utilization, and reset time
+- **`EVENT_RATE_LIMIT` constant** and `StreamHandle.on('rate_limit', cb)` support
+- **Unknown SDK event forwarding** — unknown message types are now forwarded as generic system events instead of being silently dropped
+
+## [0.4.4] - 2026-03-18
+
+### Fixed
+
+- **Structured output** — `result.structured` now correctly populated from SDK `structured_output` field (was always `null`)
+- **Error result distinction** — `StreamResultEvent` now includes `subtype`, `isError`, `stopReason`, `numTurns`
+- **Init retry** — `initPromise` resets on failure, allowing subsequent `init()` calls to retry
+- **Init timeout** — new `initTimeoutMs` option (default 2 minutes) prevents infinite hangs
+- **mcpConfig validation** — throws error when used in SDK mode (not supported by SDK)
+- **ChatHandle crash handling** — pending `send()` promises now reject when CLI process exits unexpectedly
+- **Safe dispatch** — callback errors no longer break the stream for other callbacks
+- **Buffer limit** — 100MB stdout limit in CliExecutor to prevent OOM
+
+## [0.4.3] - 2026-03-18
+
+### Fixed
+
+- **`schema` in ClientOptions** — added missing `schema` field to `ClientOptions` for SDK mode structured output
+
+## [0.4.2] - 2026-03-17
+
+### Added
+
+- Open Graph meta tags for link previews in Telegram and messengers
+
+## [0.4.1] - 2026-03-17
+
+### Changed
+
+- Updated npm README
+
 ## [0.4.0] - 2026-03-16
 
 ### Added

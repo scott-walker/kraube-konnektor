@@ -50,8 +50,8 @@ import { EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from
 
 claude.stream('Run background task')
   .on(EVENT_TASK_STARTED, (event) => console.log(`Task ${event.taskId} started`))
-  .on(EVENT_TASK_PROGRESS, (event) => console.log(`Progress: ${event.message}`))
-  .on(EVENT_TASK_NOTIFICATION, (event) => console.log(`Notification: ${event.message}`))
+  .on(EVENT_TASK_PROGRESS, (event) => console.log(`Progress: ${event.description}`))
+  .on(EVENT_TASK_NOTIFICATION, (event) => console.log(`Notification: ${event.summary}`))
   .done()
 ```
 
