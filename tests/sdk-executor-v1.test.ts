@@ -15,11 +15,13 @@ import type { StreamEvent } from '../src/types/index.js';
 let queryCalls: Array<{ prompt: unknown; options: unknown }> = [];
 let controlCalls: Record<string, unknown[]> = {};
 let inputIterable: AsyncIterable<unknown> | null = null;
+let customResponses: unknown[] | null = null;
 
 function resetMocks() {
   queryCalls = [];
   controlCalls = {};
   inputIterable = null;
+  customResponses = null;
 }
 
 // Create a mock Query object (AsyncGenerator + control methods)
@@ -79,7 +81,10 @@ function createMockQuery(prompt: unknown): AsyncGenerator<unknown, void> & {
         },
       ];
     }
-    // Subsequent messages — normal response
+    // Subsequent messages — use custom responses if set, else default
+    if (customResponses) {
+      return customResponses;
+    }
     return [
       {
         type: 'assistant',
@@ -710,6 +715,160 @@ describe('SdkExecutor V1 — options passthrough', () => {
     const opts = queryCalls[0]!.options as Record<string, unknown>;
     expect(opts.spawnClaudeCodeProcess).toBe(spawnFn);
 
+    executor.close();
+  });
+});
+
+describe('SdkExecutor — structured output and error handling', () => {
+  beforeEach(() => {
+    resetMocks();
+  });
+
+  it('extracts structured_output from result into result.structured', async () => {
+    const structured = { endpoints: ['/api/users', '/api/posts'] };
+    customResponses = [
+      {
+        type: 'result',
+        subtype: 'success',
+        result: '{"endpoints":["/api/users","/api/posts"]}',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+        structured_output: structured,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const result = await executor.execute(
+      ['--print', '--output-format', 'json', 'Extract endpoints'],
+      { cwd: '/tmp', env: {} },
+    );
+
+    expect(result.structured).toEqual(structured);
+    executor.close();
+  });
+
+  it('result.structured is null when no schema was used', async () => {
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const result = await executor.execute(
+      ['--print', '--output-format', 'json', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    );
+
+    expect(result.structured).toBeNull();
+    executor.close();
+  });
+
+  it('stream result event includes structured output', async () => {
+    const structured = { name: 'Test' };
+    customResponses = [
+      {
+        type: 'result',
+        subtype: 'success',
+        result: '{"name":"Test"}',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+        structured_output: structured,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Extract'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const resultEvent = events.find((e) => e.type === 'result');
+    expect(resultEvent).toBeDefined();
+    expect((resultEvent as any).structured).toEqual(structured);
+    executor.close();
+  });
+
+  it('result event includes isError, stopReason, numTurns', async () => {
+    customResponses = [
+      {
+        type: 'result',
+        subtype: 'error_max_turns',
+        result: 'Exceeded max turns',
+        session_id: 'mock-session',
+        usage: { input_tokens: 100, output_tokens: 200 },
+        total_cost_usd: 0.05,
+        duration_ms: 5000,
+        is_error: true,
+        stop_reason: 'max_turns',
+        num_turns: 10,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Do many things'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const resultEvent = events.find((e) => e.type === 'result') as any;
+    expect(resultEvent.subtype).toBe('error');
+    expect(resultEvent.isError).toBe(true);
+    expect(resultEvent.stopReason).toBe('max_turns');
+    expect(resultEvent.numTurns).toBe(10);
+    executor.close();
+  });
+
+  it('init can be retried after failure', async () => {
+    let callCount = 0;
+
+    // Temporarily override the mock to fail on first call
+    const originalQuery = vi.mocked(await import('@anthropic-ai/claude-agent-sdk')).query;
+    const mockQuery = vi.fn().mockImplementation((params: { prompt: unknown; options: unknown }) => {
+      callCount++;
+      if (callCount === 1) {
+        // Return a generator that immediately throws
+        const gen: any = {
+          next: () => Promise.reject(new Error('SDK init failed')),
+          return: () => Promise.resolve({ value: undefined, done: true }),
+          throw: (err: Error) => Promise.reject(err),
+          [Symbol.asyncIterator]() { return this; },
+          close() {},
+        };
+        queryCalls.push(params);
+        return gen;
+      }
+      // Second call succeeds normally
+      queryCalls.push(params);
+      return createMockQuery(params.prompt);
+    });
+
+    vi.mocked(await import('@anthropic-ai/claude-agent-sdk')).query = mockQuery as any;
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+
+    // First init should fail
+    await expect(executor.init()).rejects.toThrow('SDK init failed');
+    expect(executor.ready).toBe(false);
+
+    // Second init should succeed (initPromise was reset)
+    await executor.init();
+    expect(executor.ready).toBe(true);
+
+    // Restore original mock
+    vi.mocked(await import('@anthropic-ai/claude-agent-sdk')).query = originalQuery;
     executor.close();
   });
 });

@@ -7,6 +7,7 @@ import type { IExecutor, ExecuteOptions } from './interface.js';
 import {
   DEFAULT_TIMEOUT_MS,
   DEFAULT_EXECUTABLE,
+  DEFAULT_MAX_BUFFER_BYTES,
   ERR_ENOENT,
   SIGNAL_SIGTERM,
   EVENT_SYSTEM,
@@ -140,8 +141,21 @@ export class CliExecutor implements IExecutor {
 
       const chunks: Buffer[] = [];
       const errChunks: Buffer[] = [];
+      let totalBytes = 0;
 
-      child.stdout!.on('data', (chunk: Buffer) => chunks.push(chunk));
+      child.stdout!.on('data', (chunk: Buffer) => {
+        totalBytes += chunk.length;
+        if (totalBytes > DEFAULT_MAX_BUFFER_BYTES) {
+          child.kill(SIGNAL_SIGTERM);
+          reject(new CliExecutionError(
+            `Output exceeded ${DEFAULT_MAX_BUFFER_BYTES} bytes limit`,
+            1,
+            '',
+          ));
+          return;
+        }
+        chunks.push(chunk);
+      });
       child.stderr!.on('data', (chunk: Buffer) => errChunks.push(chunk));
 
       const timer = setTimeout(() => {

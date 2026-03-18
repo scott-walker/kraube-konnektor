@@ -2,7 +2,8 @@ import type { StreamEvent } from '../types/index.js';
 import {
   KEY_TYPE, KEY_RESULT, KEY_SESSION_ID, KEY_USAGE, KEY_INPUT_TOKENS, KEY_OUTPUT_TOKENS,
   KEY_TOTAL_COST, KEY_DURATION, KEY_MESSAGE, KEY_CONTENT, KEY_TEXT, KEY_NAME, KEY_INPUT,
-  KEY_ERROR, KEY_CODE, EVENT_RESULT, EVENT_ERROR, EVENT_TEXT, EVENT_TOOL_USE, EVENT_SYSTEM,
+  KEY_ERROR, KEY_CODE, KEY_SUBTYPE, KEY_STRUCTURED_OUTPUT,
+  EVENT_RESULT, EVENT_ERROR, EVENT_TEXT, EVENT_TOOL_USE, EVENT_SYSTEM,
   ROLE_ASSISTANT, BLOCK_TEXT, BLOCK_TOOL_USE, SYSTEM_UNKNOWN,
 } from '../constants.js';
 
@@ -61,9 +62,11 @@ export function parseStreamLine(line: string): StreamEvent | null {
 
 function parseResultEvent(json: Record<string, unknown>): StreamEvent {
   const usage = json[KEY_USAGE] as Record<string, unknown> | undefined;
+  const subtype = json[KEY_SUBTYPE] as string | undefined;
 
   return {
     type: EVENT_RESULT,
+    subtype: subtype === 'success' ? 'success' : subtype?.startsWith('error') ? 'error' : subtype ?? 'success',
     text: typeof json[KEY_RESULT] === 'string' ? json[KEY_RESULT] : '',
     sessionId: String(json[KEY_SESSION_ID] ?? ''),
     usage: {
@@ -72,6 +75,10 @@ function parseResultEvent(json: Record<string, unknown>): StreamEvent {
     },
     cost: typeof json[KEY_TOTAL_COST] === 'number' ? json[KEY_TOTAL_COST] : null,
     durationMs: typeof json[KEY_DURATION] === 'number' ? json[KEY_DURATION] : 0,
+    isError: json['is_error'] === true,
+    stopReason: typeof json['stop_reason'] === 'string' ? json['stop_reason'] : null,
+    numTurns: typeof json['num_turns'] === 'number' ? json['num_turns'] : undefined,
+    structured: json[KEY_STRUCTURED_OUTPUT] ?? null,
   };
 }
 

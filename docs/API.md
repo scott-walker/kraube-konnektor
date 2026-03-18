@@ -606,7 +606,7 @@ Discriminated union yielded by `stream()`. Check `event.type` to narrow.
 |------|----------|--------|------|
 | `'text'` | `EVENT_TEXT` | `text: string` | Text chunk received |
 | `'tool_use'` | `EVENT_TOOL_USE` | `toolName: string`, `toolInput: object` | Tool being invoked |
-| `'result'` | `EVENT_RESULT` | `text`, `sessionId`, `usage`, `cost`, `durationMs` | Query completed |
+| `'result'` | `EVENT_RESULT` | `text`, `sessionId`, `usage`, `cost`, `durationMs`, `subtype?`, `isError?`, `stopReason?`, `numTurns?`, `structured?` | Query completed |
 | `'error'` | `EVENT_ERROR` | `message: string`, `code?: string` | Error occurred |
 | `'system'` | `EVENT_SYSTEM` | `subtype: string`, `data: object` | System/unknown event |
 | `'task_started'` | `EVENT_TASK_STARTED` | `taskId`, `description`, `taskType?`, `prompt?` | Subagent started |

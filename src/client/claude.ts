@@ -98,6 +98,7 @@ export class Claude {
         plugins: options.plugins,
         spawnClaudeCodeProcess: options.spawnClaudeCodeProcess as ((options: unknown) => unknown) | undefined,
         schema: options.schema,
+        initTimeoutMs: options.initTimeoutMs,
       };
       this.sdkExecutor = new SdkExecutor(sdkOpts);
       this.executor = this.sdkExecutor;

@@ -169,30 +169,36 @@ export class StreamHandle implements AsyncIterable<StreamEvent> {
   }
 
   private dispatch(event: StreamEvent): void {
+    const safeCall = <T>(callbacks: Array<(arg: T) => void>, arg: T) => {
+      for (const cb of callbacks) {
+        try { cb(arg); } catch { /* user callback error should not break the stream */ }
+      }
+    };
+
     switch (event.type) {
       case EVENT_TEXT:
-        for (const cb of this.textCallbacks) cb(event.text);
+        safeCall(this.textCallbacks, event.text);
         break;
       case EVENT_TOOL_USE:
-        for (const cb of this.toolUseCallbacks) cb(event);
+        safeCall(this.toolUseCallbacks, event);
         break;
       case EVENT_RESULT:
-        for (const cb of this.resultCallbacks) cb(event);
+        safeCall(this.resultCallbacks, event);
         break;
       case EVENT_ERROR:
-        for (const cb of this.errorCallbacks) cb(event);
+        safeCall(this.errorCallbacks, event);
         break;
       case EVENT_SYSTEM:
-        for (const cb of this.systemCallbacks) cb(event);
+        safeCall(this.systemCallbacks, event);
         break;
       case EVENT_TASK_STARTED:
-        for (const cb of this.taskStartedCallbacks) cb(event);
+        safeCall(this.taskStartedCallbacks, event);
         break;
       case EVENT_TASK_PROGRESS:
-        for (const cb of this.taskProgressCallbacks) cb(event);
+        safeCall(this.taskProgressCallbacks, event);
         break;
       case EVENT_TASK_NOTIFICATION:
-        for (const cb of this.taskNotificationCallbacks) cb(event);
+        safeCall(this.taskNotificationCallbacks, event);
         break;
     }
   }

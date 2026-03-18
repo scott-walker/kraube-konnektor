@@ -65,6 +65,9 @@ export interface StreamToolUseEvent {
 export interface StreamResultEvent {
   readonly type: 'result';
 
+  /** Result subtype: 'success' or 'error'. */
+  readonly subtype?: 'success' | 'error' | string;
+
   /** Final text result. */
   readonly text: string;
 
@@ -79,6 +82,21 @@ export interface StreamResultEvent {
 
   /** Duration in milliseconds. */
   readonly durationMs: number;
+
+  /** Whether the result is an error. */
+  readonly isError?: boolean;
+
+  /** Reason for stopping: 'end_turn', 'max_tokens', 'tool_use', etc. */
+  readonly stopReason?: string | null;
+
+  /** Number of agentic turns executed. */
+  readonly numTurns?: number;
+
+  /**
+   * Structured output when a JSON schema was provided.
+   * `null` if no schema was used.
+   */
+  readonly structured?: unknown | null;
 }
 
 export interface StreamErrorEvent {

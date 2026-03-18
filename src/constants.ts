@@ -205,3 +205,5 @@ export const ERR_NAME_VALIDATION = 'ValidationError' as const;
 export const DEFAULT_EXECUTABLE = 'claude' as const;
 export const DEFAULT_MODEL = 'sonnet' as const;
 export const DEFAULT_TIMEOUT_MS = 600_000;
+export const DEFAULT_INIT_TIMEOUT_MS = 120_000;
+export const DEFAULT_MAX_BUFFER_BYTES = 100 * 1024 * 1024; // 100 MB

@@ -23,6 +23,12 @@ export function validateClientOptions(options: ClientOptions): void {
       throw new ValidationError('effortLevel', `must be one of: ${VALID_EFFORT_LEVELS.join(', ')}`);
     }
   }
+  if (options.mcpConfig && options.useSdk !== false) {
+    throw new ValidationError(
+      'mcpConfig',
+      'is not supported in SDK mode. Use mcpServers (inline definitions) instead, or set useSdk: false for CLI mode',
+    );
+  }
 }
 
 /**

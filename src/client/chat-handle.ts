@@ -73,6 +73,18 @@ export class ChatHandle {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
+    this.child.on('error', (err) => {
+      this._closed = true;
+      this.rejectPending(err);
+    });
+
+    this.child.on('close', (code) => {
+      this._closed = true;
+      if (code !== 0 && code !== null) {
+        this.rejectPending(new Error(`CLI process exited with code ${code}`));
+      }
+    });
+
     this.startReading();
   }
 
@@ -264,22 +276,36 @@ export class ChatHandle {
     });
   }
 
+  private rejectPending(error: Error): void {
+    // Reject any pending send() promises by dispatching an error event
+    const callbacks = [...this.errorCallbacks];
+    for (const cb of callbacks) {
+      try { cb({ type: EVENT_ERROR, message: error.message }); } catch { /* ignore */ }
+    }
+  }
+
   private dispatch(event: StreamEvent): void {
+    const safeCall = <T>(callbacks: Array<(arg: T) => void>, arg: T) => {
+      for (const cb of callbacks) {
+        try { cb(arg); } catch { /* user callback error should not break the stream */ }
+      }
+    };
+
     switch (event.type) {
       case EVENT_TEXT:
-        for (const cb of this.textCallbacks) cb(event.text);
+        safeCall(this.textCallbacks, event.text);
         break;
       case EVENT_TOOL_USE:
-        for (const cb of this.toolUseCallbacks) cb(event);
+        safeCall(this.toolUseCallbacks, event);
         break;
       case EVENT_RESULT:
-        for (const cb of this.resultCallbacks) cb(event);
+        safeCall(this.resultCallbacks, event);
         break;
       case EVENT_ERROR:
-        for (const cb of this.errorCallbacks) cb(event);
+        safeCall(this.errorCallbacks, event);
         break;
       case EVENT_SYSTEM:
-        for (const cb of this.systemCallbacks) cb(event);
+        safeCall(this.systemCallbacks, event);
         break;
     }
   }

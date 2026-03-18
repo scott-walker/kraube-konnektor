@@ -46,9 +46,11 @@ import {
   KEY_MODEL,
   KEY_TOOLS,
   KEY_SUBTYPE,
+  KEY_STRUCTURED_OUTPUT,
   FLAGS_WITH_VALUE,
   FORMAT_JSON,
   FORMAT_STREAM_JSON,
+  DEFAULT_INIT_TIMEOUT_MS,
 } from '../constants.js';
 
 // Dynamic import types — avoid hard crash if SDK not installed
@@ -135,7 +137,20 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
     if (this._ready) return;
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this.doInit();
+    const timeoutMs = this.sdkOptions.initTimeoutMs ?? DEFAULT_INIT_TIMEOUT_MS;
+    this.initPromise = Promise.race([
+      this.doInit(),
+      new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new CliExecutionError(`SDK initialization timed out after ${timeoutMs}ms`, 1, '')),
+          timeoutMs,
+        );
+      }),
+    ]).catch((err) => {
+      // Reset so that subsequent init() calls can retry
+      this.initPromise = null;
+      throw err;
+    });
     return this.initPromise;
   }
 
@@ -174,6 +189,7 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
         usage = parsed.usage;
         cost = parsed.cost;
         durationMs = parsed.durationMs;
+        structured = parsed.structured ?? null;
         return true; // stop
       }
       return false;
@@ -569,8 +585,10 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
       case EVENT_RESULT: {
         const result = msg as Record<string, unknown>;
         const usage = result[KEY_USAGE] as Record<string, unknown> | undefined;
+        const subtype = result[KEY_SUBTYPE] as string | undefined;
         return {
           type: EVENT_RESULT,
+          subtype: subtype === 'success' ? 'success' : subtype?.startsWith('error') ? 'error' : subtype ?? 'success',
           text: typeof result[KEY_RESULT] === 'string' ? result[KEY_RESULT] : '',
           sessionId: String(result[KEY_SESSION_ID] ?? ''),
           usage: {
@@ -579,6 +597,10 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
           },
           cost: typeof result[KEY_TOTAL_COST] === 'number' ? result[KEY_TOTAL_COST] : null,
           durationMs: typeof result[KEY_DURATION] === 'number' ? result[KEY_DURATION] : 0,
+          isError: result['is_error'] === true,
+          stopReason: typeof result['stop_reason'] === 'string' ? result['stop_reason'] : null,
+          numTurns: typeof result['num_turns'] === 'number' ? result['num_turns'] : undefined,
+          structured: result[KEY_STRUCTURED_OUTPUT] ?? null,
         };
       }
 
@@ -763,6 +785,9 @@ export interface SdkExecutorOptions {
 
   /** Custom spawn function for VMs/containers. */
   readonly spawnClaudeCodeProcess?: (options: unknown) => unknown;
+
+  /** Timeout for SDK initialization in milliseconds. Default: 120000 (2 minutes). */
+  readonly initTimeoutMs?: number;
 }
 
 /**

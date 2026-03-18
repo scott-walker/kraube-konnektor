@@ -49,6 +49,21 @@ describe('validateClientOptions', () => {
       validateClientOptions({ effortLevel: 'extreme' as 'high' }),
     ).toThrow(ValidationError);
   });
+
+  it('rejects mcpConfig in SDK mode (default)', () => {
+    expect(() =>
+      validateClientOptions({ mcpConfig: '/path/to/config.json' }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      validateClientOptions({ mcpConfig: '/path/to/config.json' }),
+    ).toThrow(/mcpServers/);
+  });
+
+  it('accepts mcpConfig in CLI mode', () => {
+    expect(() =>
+      validateClientOptions({ mcpConfig: '/path/to/config.json', useSdk: false }),
+    ).not.toThrow();
+  });
 });
 
 describe('validateQueryOptions', () => {

@@ -317,6 +317,12 @@ export interface ClientOptions {
   readonly spawnClaudeCodeProcess?: (options: SpawnOptions) => SpawnedProcess;
 
   /**
+   * Timeout for SDK initialization in milliseconds.
+   * Default: 120000 (2 minutes). SDK mode only.
+   */
+  readonly initTimeoutMs?: number;
+
+  /**
    * JSON Schema for structured output.
    * All responses will be validated JSON matching this schema.
    *

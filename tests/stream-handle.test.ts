@@ -165,5 +165,23 @@ describe('StreamHandle', () => {
 
       expect(systems).toEqual(['init']);
     });
+
+    it('callback error does not break other callbacks or the stream', async () => {
+      const texts: string[] = [];
+      const events: StreamEvent[] = [
+        { type: 'text', text: 'Hello' },
+        { type: 'result', text: 'Hello', sessionId: 'sess-1', usage: { inputTokens: 0, outputTokens: 0 }, cost: null, durationMs: 0 },
+      ];
+
+      const result = await new StreamHandle(createSource(events))
+        .on('text', () => { throw new Error('callback exploded'); })
+        .on('text', (t) => texts.push(t))
+        .done();
+
+      // Second callback still executed despite first throwing
+      expect(texts).toEqual(['Hello']);
+      // Stream completed successfully
+      expect(result.type).toBe('result');
+    });
   });
 });
