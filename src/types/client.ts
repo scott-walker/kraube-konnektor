@@ -315,6 +315,30 @@ export interface ClientOptions {
    * ```
    */
   readonly spawnClaudeCodeProcess?: (options: SpawnOptions) => SpawnedProcess;
+
+  /**
+   * JSON Schema for structured output.
+   * All responses will be validated JSON matching this schema.
+   *
+   * In SDK mode, this is set once at session initialization.
+   * In CLI mode, this is passed as `--json-schema` to every query.
+   *
+   * For per-query schema overrides, use {@link QueryOptions.schema}.
+   *
+   * @example
+   * ```ts
+   * const claude = new Claude({
+   *   schema: {
+   *     type: 'object',
+   *     properties: {
+   *       endpoints: { type: 'array', items: { type: 'string' } },
+   *     },
+   *     required: ['endpoints'],
+   *   },
+   * })
+   * ```
+   */
+  readonly schema?: Record<string, unknown>;
 }
 
 /**

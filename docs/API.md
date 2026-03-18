@@ -327,6 +327,7 @@ Options set at client construction time. Act as defaults for all queries.
 | `env`                 | `Record<string, string>` | Extra environment variables                    |
 | `noSessionPersistence`| `boolean`               | Don't save sessions to disk                     |
 | `name`                | `string`                | Display name for the session (`--name`)         |
+| `schema`              | `object`                | JSON Schema for structured output               |
 | `strictMcpConfig`     | `boolean`               | Ignore MCP servers not in `mcpConfig`           |
 
 ### SDK-only ClientOptions

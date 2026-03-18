@@ -98,7 +98,7 @@ export function mergeOptions(
     sessionId: extra.sessionId,
     continueSession: extra.continueSession,
     forkSession: extra.forkSession,
-    schema: query?.schema,
+    schema: query?.schema ?? client.schema,
     agent: query?.agent ?? client.agent,
     tools: query?.tools ?? client.tools,
     name: client.name,

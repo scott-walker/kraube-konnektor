@@ -97,6 +97,7 @@ export class Claude {
         settings: options.settings,
         plugins: options.plugins,
         spawnClaudeCodeProcess: options.spawnClaudeCodeProcess as ((options: unknown) => unknown) | undefined,
+        schema: options.schema,
       };
       this.sdkExecutor = new SdkExecutor(sdkOpts);
       this.executor = this.sdkExecutor;
