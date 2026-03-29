@@ -6,7 +6,7 @@ import { setup } from './commands/setup.js';
 const program = new Command()
   .name('claude-connector')
   .description('CLI for Claude Connector — quick setup & management')
-  .version('0.5.0');
+  .version('0.5.1');
 
 program
   .command('setup')

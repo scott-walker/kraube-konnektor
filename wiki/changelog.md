@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2026-03-29
+
+### Fixed
+
+- **`bin` entry point** — fixed invalid script path format that caused npm to strip the `claude-connector` binary during publish
+
 ## [0.5.0] - 2026-03-29
 
 ### Added

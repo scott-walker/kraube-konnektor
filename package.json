@@ -1,6 +1,6 @@
 {
   "name": "@scottwalker/claude-connector",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Programmatic Node.js interface for Claude Code CLI",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "claude-connector": "./dist/cli/index.js"
+    "claude-connector": "dist/cli/index.js"
   },
   "files": [
     "dist",
