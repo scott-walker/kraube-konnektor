@@ -19,7 +19,7 @@ export default defineConfig({
       { text: 'API', link: '/api/' },
       { text: 'Landing', link: 'https://scott-walker.github.io/claude-connector/' },
       {
-        text: 'v0.4.8',
+        text: 'v0.5.0',
         items: [
           { text: 'Changelog', link: '/changelog' },
           { text: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/claude-connector' },

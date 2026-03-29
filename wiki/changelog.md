@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-03-29
+
+### Added
+
+- **CLI `setup` command** — one-command bootstrap for fresh servers: checks Node.js version, installs Claude Code globally, runs `claude login` for authentication, and verifies the result
+- **`bin` entry point** — package now provides `claude-connector` executable via `npx @scottwalker/claude-connector setup`
+- **`/release` dev command** — Claude Code slash command that automates the full release process (version bump, changelogs, build, publish, GitHub release)
+
+### Changed
+
+- New runtime dependencies: `commander`, `ora`, `chalk` (for CLI interface)
+
 ## [0.4.7] - 2026-03-18
 
 ### Fixed
