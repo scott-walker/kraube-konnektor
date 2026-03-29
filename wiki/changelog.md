@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-03-29
+
+### Added
+
+- **Proxy support in CLI setup** — interactive prompt or `--proxy` flag to route Claude Code requests through an HTTP proxy (`HTTP_PROXY`/`HTTPS_PROXY`)
+
 ## [0.5.2] - 2026-03-29
 
 ### Added

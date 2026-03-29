@@ -121,12 +121,39 @@ async function askScope(): Promise<string> {
   return configDir;
 }
 
-function buildEnv(configDir: string): NodeJS.ProcessEnv {
+async function askProxy(proxyFromFlag?: string): Promise<string | undefined> {
+  if (proxyFromFlag) return proxyFromFlag;
+
+  // Check if already set in environment
+  const existing = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  if (existing) return existing;
+
+  console.log(chalk.bold('  Proxy'));
+  console.log(chalk.dim('  HTTP proxy for Claude Code requests.'));
+  console.log(chalk.dim('  Leave empty for direct connection.\n'));
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(chalk.cyan('  Proxy URL: '));
+  rl.close();
+
+  console.log();
+  return answer.trim() || undefined;
+}
+
+function buildEnv(configDir: string, proxy?: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+
   const defaultPath = resolve(homedir(), DEFAULT_CONFIG_DIR);
-  if (configDir === defaultPath) {
-    return { ...process.env };
+  if (configDir !== defaultPath) {
+    env.CLAUDE_CONFIG_DIR = configDir;
   }
-  return { ...process.env, CLAUDE_CONFIG_DIR: configDir };
+
+  if (proxy) {
+    env.HTTP_PROXY = proxy;
+    env.HTTPS_PROXY = proxy;
+  }
+
+  return env;
 }
 
 function printResult(ok: boolean, label: string): void {
@@ -185,7 +212,7 @@ function printQuickStart(configDir: string, hasCustomDir: boolean): void {
   console.log();
 }
 
-export async function setup(): Promise<void> {
+export async function setup(options?: { proxy?: string }): Promise<void> {
   banner();
 
   // Step 1: Check Node.js
@@ -215,10 +242,20 @@ export async function setup(): Promise<void> {
   // Step 3: Choose config directory (scope)
   console.log();
   const configDir = await askScope();
-  const env = buildEnv(configDir);
   printResult(true, `Config directory ${chalk.dim(`(${configDir})`)}`);
 
-  // Step 4: Check / run authentication
+  // Step 4: Proxy
+  console.log();
+  const proxy = await askProxy(options?.proxy);
+  if (proxy) {
+    printResult(true, `Proxy ${chalk.dim(`(${proxy})`)}`);
+  } else {
+    printResult(true, `Proxy ${chalk.dim('(direct connection)')}`);
+  }
+
+  const env = buildEnv(configDir, proxy);
+
+  // Step 5: Check / run authentication
   const hasCustomDir = !!env.CLAUDE_CONFIG_DIR;
 
   if (isClaudeAuthenticated(env)) {
