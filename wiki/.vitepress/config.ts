@@ -19,7 +19,7 @@ export default defineConfig({
       { text: 'API', link: '/api/' },
       { text: 'Landing', link: 'https://scott-walker.github.io/kraube-konnektor/' },
       {
-        text: 'v0.6.0',
+        text: 'v0.6.1',
         items: [
           { text: 'Changelog', link: '/changelog' },
           { text: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/kraube-konnektor' },
