@@ -1,12 +1,12 @@
 # Contributing
 
-Thank you for your interest in contributing to claude-connector!
+Thank you for your interest in contributing to kraube-konnektor!
 
 ## Development Setup
 
 ```bash
-git clone git@github.com:scott-walker/claude-connector.git
-cd claude-connector
+git clone git@github.com:scott-walker/kraube-konnektor.git
+cd kraube-konnektor
 npm install
 npm run build
 ```

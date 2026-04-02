@@ -1,7 +1,7 @@
 import type { QueryResult, StreamEvent } from '../types/index.js';
 
 /**
- * Abstract execution interface — the core abstraction of claude-connector.
+ * Abstract execution interface — the core abstraction of kraube-konnektor.
  *
  * All interaction with Claude Code goes through an executor. This decouples
  * the public API ({@link Claude}, {@link Session}) from the underlying
@@ -20,7 +20,7 @@ import type { QueryResult, StreamEvent } from '../types/index.js';
  * - `stream()` runs a query and yields incremental events as an async iterator.
  * - Both methods receive a fully resolved argument list (no option merging here).
  * - Executors must NOT hold mutable state between calls (stateless per invocation).
- * - Error conditions must throw {@link ClaudeConnectorError} subclasses.
+ * - Error conditions must throw {@link KraubeKonnektorError} subclasses.
  */
 export interface IExecutor {
   /**

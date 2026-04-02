@@ -7,7 +7,7 @@ Bidirectional streaming for multi-turn conversation over a single persistent pro
 `.send()` sends a prompt and returns a promise that resolves when the turn completes:
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -39,7 +39,7 @@ import {
   EVENT_TEXT,
   EVENT_TOOL_USE,
   EVENT_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -108,7 +108,7 @@ chat.abort()     // immediate kill (SIGTERM)
 
 ```ts
 import * as readline from 'node:readline'
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })

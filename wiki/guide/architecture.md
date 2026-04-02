@@ -2,7 +2,7 @@
 
 ## Overview
 
-`claude-connector` is a programmatic Node.js interface for the Claude Code CLI. It wraps the `claude` command-line tool (used via subscription) and exposes a clean TypeScript API for building integrations.
+`kraube-konnektor` is a programmatic Node.js interface for the Claude Code CLI. It wraps the `claude` command-line tool (used via subscription) and exposes a clean TypeScript API for building integrations.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -139,7 +139,7 @@ The central abstraction that decouples the public API from the transport mechani
 - `abort()` → `void` (cancel running execution)
 
 **Invariants**:
-- Error conditions throw `ClaudeConnectorError` subclasses
+- Error conditions throw `KraubeKonnektorError` subclasses
 - Arguments are fully resolved (no option merging in the executor)
 
 ### StreamHandle
@@ -226,7 +226,7 @@ claude.chat()
 ## Error Handling Strategy
 
 ```
-ClaudeConnectorError          Base class (catch-all)
+KraubeKonnektorError          Base class (catch-all)
 ├── CliNotFoundError          Binary not found (ERR_ENOENT)
 ├── CliExecutionError         Non-zero exit code
 ├── CliTimeoutError           Process exceeded DEFAULT_TIMEOUT_MS
@@ -279,7 +279,7 @@ import {
   type ExecuteOptions,
   type QueryResult,
   type StreamEvent,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const mockExecutor: IExecutor = {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {

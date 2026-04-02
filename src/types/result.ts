@@ -44,7 +44,16 @@ export type StreamEvent =
   | StreamRateLimitEvent
   | StreamTaskStartedEvent
   | StreamTaskProgressEvent
-  | StreamTaskNotificationEvent;
+  | StreamTaskNotificationEvent
+  | StreamToolProgressEvent
+  | StreamToolUseSummaryEvent
+  | StreamAuthStatusEvent
+  | StreamHookStartedEvent
+  | StreamHookProgressEvent
+  | StreamHookResponseEvent
+  | StreamFilesPersistedEvent
+  | StreamCompactBoundaryEvent
+  | StreamLocalCommandOutputEvent;
 
 export interface StreamTextEvent {
   readonly type: 'text';
@@ -212,6 +221,153 @@ export interface StreamTaskNotificationEvent {
     toolUses: number;
     durationMs: number;
   };
+}
+
+// ── Tool progress & summary ─────────────────────────────────────
+
+export interface StreamToolProgressEvent {
+  readonly type: 'tool_progress';
+
+  /** Tool use ID for this invocation. */
+  readonly toolUseId: string;
+
+  /** Name of the tool being executed. */
+  readonly toolName: string;
+
+  /** Parent tool use ID (for nested tool calls). */
+  readonly parentToolUseId: string | null;
+
+  /** How long the tool has been running. */
+  readonly elapsedTimeSeconds: number;
+
+  /** Task ID if running inside a subagent. */
+  readonly taskId?: string;
+}
+
+export interface StreamToolUseSummaryEvent {
+  readonly type: 'tool_use_summary';
+
+  /** AI-generated summary of what the tools did. */
+  readonly summary: string;
+
+  /** IDs of tool uses this summary covers. */
+  readonly precedingToolUseIds: string[];
+}
+
+// ── Auth status ─────────────────────────────────────────────────
+
+export interface StreamAuthStatusEvent {
+  readonly type: 'auth_status';
+
+  /** Whether authentication is currently in progress. */
+  readonly isAuthenticating: boolean;
+
+  /** Auth flow output messages. */
+  readonly output: string[];
+
+  /** Error message if auth failed. */
+  readonly error?: string;
+}
+
+// ── Hook lifecycle ──────────────────────────────────────────────
+
+export interface StreamHookStartedEvent {
+  readonly type: 'hook_started';
+
+  /** Unique hook execution ID. */
+  readonly hookId: string;
+
+  /** Hook name from settings. */
+  readonly hookName: string;
+
+  /** Event that triggered this hook (e.g. 'PreToolUse'). */
+  readonly hookEvent: string;
+}
+
+export interface StreamHookProgressEvent {
+  readonly type: 'hook_progress';
+
+  /** Unique hook execution ID. */
+  readonly hookId: string;
+
+  /** Hook name from settings. */
+  readonly hookName: string;
+
+  /** Event that triggered this hook. */
+  readonly hookEvent: string;
+
+  /** Standard output so far. */
+  readonly stdout: string;
+
+  /** Standard error so far. */
+  readonly stderr: string;
+
+  /** Combined output. */
+  readonly output: string;
+}
+
+export interface StreamHookResponseEvent {
+  readonly type: 'hook_response';
+
+  /** Unique hook execution ID. */
+  readonly hookId: string;
+
+  /** Hook name from settings. */
+  readonly hookName: string;
+
+  /** Event that triggered this hook. */
+  readonly hookEvent: string;
+
+  /** Combined output. */
+  readonly output: string;
+
+  /** Standard output. */
+  readonly stdout: string;
+
+  /** Standard error. */
+  readonly stderr: string;
+
+  /** Process exit code. */
+  readonly exitCode?: number;
+
+  /** Hook outcome. */
+  readonly outcome: 'success' | 'error' | 'cancelled';
+}
+
+// ── File persistence ────────────────────────────────────────────
+
+export interface StreamFilesPersistedEvent {
+  readonly type: 'files_persisted';
+
+  /** Files that were successfully persisted. */
+  readonly files: ReadonlyArray<{ filename: string; fileId: string }>;
+
+  /** Files that failed to persist. */
+  readonly failed: ReadonlyArray<{ filename: string; error: string }>;
+
+  /** ISO timestamp of when persistence occurred. */
+  readonly processedAt: string;
+}
+
+// ── Context compaction ──────────────────────────────────────────
+
+export interface StreamCompactBoundaryEvent {
+  readonly type: 'compact_boundary';
+
+  /** What triggered compaction. */
+  readonly trigger: 'manual' | 'auto';
+
+  /** Token count before compaction. */
+  readonly preTokens: number;
+}
+
+// ── Local command output ────────────────────────────────────────
+
+export interface StreamLocalCommandOutputEvent {
+  readonly type: 'local_command_output';
+
+  /** Text output from the slash command (e.g. /voice, /cost). */
+  readonly content: string;
 }
 
 // ── Info types (from control methods) ─────────────────────────────

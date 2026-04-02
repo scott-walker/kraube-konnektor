@@ -173,7 +173,7 @@ await pipeline(
 
 ```ts
 import { createWriteStream } from 'node:fs'
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const fileLog = createWriteStream('session.log', { flags: 'a' })
 

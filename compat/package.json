@@ -1,0 +1,20 @@
+{
+  "name": "@scottwalker/claude-connector",
+  "version": "0.6.0",
+  "description": "This package has been renamed to @scottwalker/kraube-konnektor. Install that instead.",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "dependencies": {
+    "@scottwalker/kraube-konnektor": ">=0.6.0"
+  },
+  "deprecated": "This package has been renamed to @scottwalker/kraube-konnektor",
+  "keywords": ["claude", "claude-code", "connector", "kraube-konnektor"],
+  "license": "MIT"
+}

@@ -40,6 +40,7 @@ function createMockQuery(prompt: unknown): AsyncGenerator<unknown, void> & {
   supportedCommands: () => Promise<unknown[]>;
   supportedAgents: () => Promise<unknown[]>;
   mcpServerStatus: () => Promise<unknown[]>;
+  initializationResult: () => Promise<unknown>;
   streamInput: (stream: AsyncIterable<unknown>) => Promise<void>;
 } {
   // Store the input iterable for multi-turn
@@ -55,33 +56,7 @@ function createMockQuery(prompt: unknown): AsyncGenerator<unknown, void> & {
   // Simulate responses for each user message
   async function processUserMessage(): Promise<unknown[]> {
     messageCount++;
-    if (messageCount === 1) {
-      // First message — init response
-      return [
-        {
-          type: 'system',
-          subtype: 'init',
-          model: 'sonnet',
-          tools: ['Read', 'Edit', 'Bash'],
-          mcp_servers: [],
-          session_id: 'mock-session',
-        },
-        {
-          type: 'assistant',
-          message: { content: [{ type: 'text', text: 'Initialized.' }] },
-        },
-        {
-          type: 'result',
-          subtype: 'success',
-          result: 'Initialized.',
-          session_id: 'mock-session',
-          usage: { input_tokens: 5, output_tokens: 3 },
-          total_cost_usd: 0.001,
-          duration_ms: 100,
-        },
-      ];
-    }
-    // Subsequent messages — use custom responses if set, else default
+    // All messages — use custom responses if set, else default
     if (customResponses) {
       return customResponses;
     }
@@ -207,6 +182,18 @@ function createMockQuery(prompt: unknown): AsyncGenerator<unknown, void> & {
       controlCalls['mcpServerStatus'] = controlCalls['mcpServerStatus'] || [];
       controlCalls['mcpServerStatus'].push([]);
       return [{ name: 'github', status: 'connected' }];
+    },
+    async initializationResult() {
+      controlCalls['initializationResult'] = controlCalls['initializationResult'] || [];
+      controlCalls['initializationResult'].push([]);
+      return {
+        commands: [{ name: '/help' }],
+        agents: [{ name: 'Explore', description: 'Fast explorer' }],
+        output_style: 'concise',
+        available_output_styles: ['concise', 'verbose'],
+        models: [{ value: 'sonnet', displayName: 'Sonnet', description: 'Fast' }],
+        account: { email: 'test@example.com', subscriptionType: 'max' },
+      };
     },
     async streamInput(stream: AsyncIterable<unknown>) {
       controlCalls['streamInput'] = controlCalls['streamInput'] || [];
@@ -877,10 +864,8 @@ describe('SdkExecutor — structured output and error handling', () => {
   it('forwards unknown SDK message types as system events', async () => {
     customResponses = [
       {
-        type: 'tool_progress',
-        tool_use_id: 'tu-1',
-        tool_name: 'Bash',
-        elapsed_time_seconds: 5,
+        type: 'some_future_type',
+        foo: 'bar',
       },
       {
         type: 'result',
@@ -904,9 +889,304 @@ describe('SdkExecutor — structured output and error handling', () => {
       events.push(event);
     }
 
-    const sysEvent = events.find((e) => e.type === 'system' && (e as any).subtype === 'tool_progress') as any;
+    const sysEvent = events.find((e) => e.type === 'system' && (e as any).subtype === 'some_future_type') as any;
     expect(sysEvent).toBeDefined();
-    expect(sysEvent.data.tool_name).toBe('Bash');
+    expect(sysEvent.data.foo).toBe('bar');
+    executor.close();
+  });
+
+  it('maps tool_progress to typed StreamToolProgressEvent', async () => {
+    customResponses = [
+      {
+        type: 'tool_progress',
+        tool_use_id: 'tu-1',
+        tool_name: 'Bash',
+        parent_tool_use_id: null,
+        elapsed_time_seconds: 5,
+        task_id: 'task-1',
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const tpEvent = events.find((e) => e.type === 'tool_progress') as any;
+    expect(tpEvent).toBeDefined();
+    expect(tpEvent.toolName).toBe('Bash');
+    expect(tpEvent.toolUseId).toBe('tu-1');
+    expect(tpEvent.elapsedTimeSeconds).toBe(5);
+    expect(tpEvent.parentToolUseId).toBeNull();
+    expect(tpEvent.taskId).toBe('task-1');
+    executor.close();
+  });
+
+  it('maps tool_use_summary to typed StreamToolUseSummaryEvent', async () => {
+    customResponses = [
+      {
+        type: 'tool_use_summary',
+        summary: 'Read 3 files and edited 1',
+        preceding_tool_use_ids: ['tu-1', 'tu-2', 'tu-3'],
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const tsEvent = events.find((e) => e.type === 'tool_use_summary') as any;
+    expect(tsEvent).toBeDefined();
+    expect(tsEvent.summary).toBe('Read 3 files and edited 1');
+    expect(tsEvent.precedingToolUseIds).toEqual(['tu-1', 'tu-2', 'tu-3']);
+    executor.close();
+  });
+
+  it('maps auth_status to typed StreamAuthStatusEvent', async () => {
+    customResponses = [
+      {
+        type: 'auth_status',
+        isAuthenticating: true,
+        output: ['Opening browser...', 'Waiting for callback...'],
+        error: undefined,
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const asEvent = events.find((e) => e.type === 'auth_status') as any;
+    expect(asEvent).toBeDefined();
+    expect(asEvent.isAuthenticating).toBe(true);
+    expect(asEvent.output).toEqual(['Opening browser...', 'Waiting for callback...']);
+    executor.close();
+  });
+
+  it('maps hook lifecycle events to typed events', async () => {
+    customResponses = [
+      {
+        type: 'system',
+        subtype: 'hook_started',
+        hook_id: 'h-1',
+        hook_name: 'pre-commit',
+        hook_event: 'PreToolUse',
+      },
+      {
+        type: 'system',
+        subtype: 'hook_progress',
+        hook_id: 'h-1',
+        hook_name: 'pre-commit',
+        hook_event: 'PreToolUse',
+        stdout: 'running...',
+        stderr: '',
+        output: 'running...',
+      },
+      {
+        type: 'system',
+        subtype: 'hook_response',
+        hook_id: 'h-1',
+        hook_name: 'pre-commit',
+        hook_event: 'PreToolUse',
+        output: 'done',
+        stdout: 'done',
+        stderr: '',
+        exit_code: 0,
+        outcome: 'success',
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const started = events.find((e) => e.type === 'hook_started') as any;
+    expect(started).toBeDefined();
+    expect(started.hookId).toBe('h-1');
+    expect(started.hookName).toBe('pre-commit');
+
+    const progress = events.find((e) => e.type === 'hook_progress') as any;
+    expect(progress).toBeDefined();
+    expect(progress.stdout).toBe('running...');
+
+    const response = events.find((e) => e.type === 'hook_response') as any;
+    expect(response).toBeDefined();
+    expect(response.outcome).toBe('success');
+    expect(response.exitCode).toBe(0);
+
+    executor.close();
+  });
+
+  it('maps files_persisted to typed StreamFilesPersistedEvent', async () => {
+    customResponses = [
+      {
+        type: 'system',
+        subtype: 'files_persisted',
+        files: [{ filename: 'src/index.ts', file_id: 'f-1' }],
+        failed: [{ filename: 'tmp/bad.ts', error: 'Permission denied' }],
+        processed_at: '2026-04-03T00:00:00Z',
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const fpEvent = events.find((e) => e.type === 'files_persisted') as any;
+    expect(fpEvent).toBeDefined();
+    expect(fpEvent.files).toEqual([{ filename: 'src/index.ts', fileId: 'f-1' }]);
+    expect(fpEvent.failed).toEqual([{ filename: 'tmp/bad.ts', error: 'Permission denied' }]);
+    expect(fpEvent.processedAt).toBe('2026-04-03T00:00:00Z');
+    executor.close();
+  });
+
+  it('maps compact_boundary to typed StreamCompactBoundaryEvent', async () => {
+    customResponses = [
+      {
+        type: 'system',
+        subtype: 'compact_boundary',
+        compact_metadata: { trigger: 'auto', pre_tokens: 150000 },
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const cbEvent = events.find((e) => e.type === 'compact_boundary') as any;
+    expect(cbEvent).toBeDefined();
+    expect(cbEvent.trigger).toBe('auto');
+    expect(cbEvent.preTokens).toBe(150000);
+    executor.close();
+  });
+
+  it('maps local_command_output to typed StreamLocalCommandOutputEvent', async () => {
+    customResponses = [
+      {
+        type: 'system',
+        subtype: 'local_command_output',
+        content: 'Total cost: $0.42',
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        result: 'Done',
+        session_id: 'mock-session',
+        usage: { input_tokens: 10, output_tokens: 20 },
+        total_cost_usd: 0.01,
+        duration_ms: 50,
+      },
+    ];
+
+    const executor = new SdkExecutor({ model: 'sonnet' });
+    await executor.init();
+
+    const events: StreamEvent[] = [];
+    for await (const event of executor.stream(
+      ['--print', '--output-format', 'stream-json', '--verbose', 'Hello'],
+      { cwd: '/tmp', env: {} },
+    )) {
+      events.push(event);
+    }
+
+    const lcEvent = events.find((e) => e.type === 'local_command_output') as any;
+    expect(lcEvent).toBeDefined();
+    expect(lcEvent.content).toBe('Total cost: $0.42');
     executor.close();
   });
 
@@ -925,6 +1205,7 @@ describe('SdkExecutor — structured output and error handling', () => {
           throw: (err: Error) => Promise.reject(err),
           [Symbol.asyncIterator]() { return this; },
           close() {},
+          initializationResult: () => Promise.reject(new Error('SDK init failed')),
         };
         queryCalls.push(params);
         return gen;

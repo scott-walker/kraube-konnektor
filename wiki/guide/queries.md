@@ -40,7 +40,7 @@ import {
   BLOCK_TEXT,
   BLOCK_TOOL_USE,
   BLOCK_TOOL_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Explain the auth module')
@@ -79,7 +79,7 @@ import {
   PERMISSION_ACCEPT_EDITS,
   EFFORT_MEDIUM,
   EFFORT_MAX,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   model: 'sonnet',
@@ -163,7 +163,7 @@ import {
   EFFORT_MEDIUM,
   EFFORT_HIGH,
   EFFORT_MAX,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ effortLevel: EFFORT_LOW })    // fast, shallow
 const claude = new Claude({ effortLevel: EFFORT_MEDIUM })  // balanced

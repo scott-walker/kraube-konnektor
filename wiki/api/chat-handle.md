@@ -5,7 +5,7 @@ Bidirectional streaming handle for real-time conversation. Maintains a persisten
 Returned from [`claude.chat()`](./#chat).
 
 ```typescript
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 const chat = claude.chat()
@@ -63,7 +63,7 @@ Send a prompt and wait for the complete response for this turn. Returns the resu
 Throws if the chat is closed or if an error event is received.
 
 ```typescript
-import { EVENT_TEXT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const chat = claude.chat()
   .on(EVENT_TEXT, (text) => process.stdout.write(text))
@@ -92,7 +92,7 @@ Callbacks persist across all turns -- register once, receive events from every `
 ```typescript
 import {
   Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const chat = claude.chat()
   .on(EVENT_TEXT, (text) => process.stdout.write(text))

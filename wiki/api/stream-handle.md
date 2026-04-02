@@ -3,7 +3,7 @@
 A streaming response handle with fluent callback API and Node.js stream support. Returned from [`claude.stream()`](./#stream) and [`session.stream()`](./session#methods).
 
 ```typescript
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const handle = claude.stream('Explain this code')
 ```
@@ -48,7 +48,7 @@ The `EVENT_TEXT` callback receives just the text string for convenience. All oth
 ```typescript
 import {
   Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.stream('Refactor auth module')
@@ -93,7 +93,7 @@ See [StreamEvent types](./types#streamevent) for full event type definitions.
 import {
   Claude,
   EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.stream('Run all agents on this codebase')
@@ -148,7 +148,7 @@ pipe(writable: { write(chunk: string): unknown }): Promise<StreamResultEvent>
 Pipe text chunks to any writable target. Returns the final result event after the stream completes. Accepts anything with a `.write()` method (Node.js streams, `process.stdout`, response objects).
 
 ```typescript
-import { EVENT_RESULT } from '@scottwalker/claude-connector'
+import { EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const result = await claude.stream('Explain the architecture').pipe(process.stdout)
 console.log(`\nDone in ${result.durationMs}ms`)
@@ -192,7 +192,7 @@ app.get('/stream', (req, res) => {
 Raw async iteration over all stream events. This is the backward-compatible API -- use fluent callbacks for new code.
 
 ```typescript
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 for await (const event of claude.stream('Analyze codebase')) {
   switch (event.type) {

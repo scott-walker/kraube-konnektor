@@ -172,7 +172,7 @@ function printQuickStart(configDir: string, hasCustomDir: boolean, proxy?: strin
   console.log(chalk.bold('  Quick Start'));
   console.log(dim('  ─────────────────────────\n'));
 
-  console.log(`  ${accent('import')} { ${key('Claude')} } ${accent('from')} ${str("'@scottwalker/claude-connector'")}`);
+  console.log(`  ${accent('import')} { ${key('Claude')} } ${accent('from')} ${str("'@scottwalker/kraube-konnektor'")}`);
   console.log();
   console.log(`  ${accent('const')} ${key('claude')} = ${accent('new')} ${key('Claude')}({`);
   console.log(`    ${key('model')}:          ${str("'sonnet'")},`);
@@ -197,7 +197,7 @@ function printQuickStart(configDir: string, hasCustomDir: boolean, proxy?: strin
 
   console.log();
   console.log(dim('  ─────────────────────────'));
-  console.log(dim('  Docs: https://github.com/scott-walker/claude-connector'));
+  console.log(dim('  Docs: https://github.com/scott-walker/kraube-konnektor'));
   console.log();
 }
 

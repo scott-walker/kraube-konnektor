@@ -9,7 +9,7 @@
  *   npm run stream
  */
 import { createInterface } from 'node:readline';
-import { Claude, CliNotFoundError, ClaudeConnectorError } from '@scottwalker/claude-connector';
+import { Claude, CliNotFoundError, KraubeKonnektorError } from '@scottwalker/kraube-konnektor';
 
 const rl = createInterface({
   input: process.stdin,
@@ -101,7 +101,7 @@ async function main() {
         console.error('\n\x1b[31mError: Claude Code CLI not found.');
         console.error('Install it: https://docs.anthropic.com/en/docs/claude-code/overview\x1b[0m\n');
         break;
-      } else if (err instanceof ClaudeConnectorError) {
+      } else if (err instanceof KraubeKonnektorError) {
         console.error(`\n\x1b[31mError: ${err.message}\x1b[0m\n`);
       } else {
         throw err;

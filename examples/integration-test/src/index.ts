@@ -1,5 +1,5 @@
 /**
- * Integration test — verifies that claude-connector works
+ * Integration test — verifies that kraube-konnektor works
  * as an installed npm package (not source code import).
  */
 import {
@@ -10,7 +10,7 @@ import {
   type StreamEvent,
   type IExecutor,
   type ExecuteOptions,
-} from '@scottwalker/claude-connector';
+} from '@scottwalker/kraube-konnektor';
 
 // ── 1. Verify types and constructor ─────────────────────────────
 

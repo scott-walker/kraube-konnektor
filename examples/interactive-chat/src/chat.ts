@@ -1,5 +1,5 @@
 /**
- * Interactive chat with Claude Code via claude-connector (SDK mode).
+ * Interactive chat with Claude Code via kraube-konnektor (SDK mode).
  *
  * Uses the persistent SDK session for fast responses.
  * The first time you run it, there's a one-time initialization (~5-10s).
@@ -11,7 +11,7 @@
  *   npm start
  */
 import { createInterface } from 'node:readline';
-import { Claude, CliNotFoundError, ClaudeConnectorError } from '@scottwalker/claude-connector';
+import { Claude, CliNotFoundError, KraubeKonnektorError } from '@scottwalker/kraube-konnektor';
 
 const rl = createInterface({
   input: process.stdin,
@@ -81,7 +81,7 @@ async function main() {
         console.error('\x1b[31mError: Claude Code CLI not found.');
         console.error('Install it: https://docs.anthropic.com/en/docs/claude-code/overview\x1b[0m\n');
         break;
-      } else if (err instanceof ClaudeConnectorError) {
+      } else if (err instanceof KraubeKonnektorError) {
         console.error(`\x1b[31mError: ${err.message}\x1b[0m\n`);
       } else {
         throw err;

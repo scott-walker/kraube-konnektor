@@ -3,11 +3,11 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Claude Connector',
   description: 'Programmatic Node.js interface for Claude Code CLI',
-  base: '/claude-connector/wiki/',
+  base: '/kraube-konnektor/wiki/',
   appearance: false,
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/claude-connector/wiki/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/kraube-konnektor/wiki/favicon.svg' }],
   ],
 
   themeConfig: {
@@ -17,12 +17,12 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'API', link: '/api/' },
-      { text: 'Landing', link: 'https://scott-walker.github.io/claude-connector/' },
+      { text: 'Landing', link: 'https://scott-walker.github.io/kraube-konnektor/' },
       {
-        text: 'v0.5.4',
+        text: 'v0.6.0',
         items: [
           { text: 'Changelog', link: '/changelog' },
-          { text: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/claude-connector' },
+          { text: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/kraube-konnektor' },
         ],
       },
     ],
@@ -85,8 +85,8 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/scott-walker/claude-connector' },
-      { icon: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/claude-connector' },
+      { icon: 'github', link: 'https://github.com/scott-walker/kraube-konnektor' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/@scottwalker/kraube-konnektor' },
     ],
 
     search: {
@@ -94,7 +94,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/scott-walker/claude-connector/edit/main/wiki/:path',
+      pattern: 'https://github.com/scott-walker/kraube-konnektor/edit/main/wiki/:path',
       text: 'Edit this page on GitHub',
     },
 

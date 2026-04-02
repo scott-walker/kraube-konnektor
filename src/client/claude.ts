@@ -24,7 +24,7 @@ import { ChatHandle } from './chat-handle.js';
 import { Scheduler, type ScheduledJob } from '../scheduler/scheduler.js';
 
 /**
- * Main entry point for claude-connector.
+ * Main entry point for kraube-konnektor.
  *
  * @example
  * ```ts

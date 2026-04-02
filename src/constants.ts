@@ -86,6 +86,33 @@ export const EVENT_TASK_NOTIFICATION = 'task_notification' as const;
 export const EVENT_RATE_LIMIT = 'rate_limit' as const;
 export const SDK_RATE_LIMIT_EVENT = 'rate_limit_event' as const;
 
+// ── Tool Progress & Summary ─────────────────────────────────────────
+
+export const EVENT_TOOL_PROGRESS = 'tool_progress' as const;
+export const EVENT_TOOL_USE_SUMMARY = 'tool_use_summary' as const;
+
+// ── Auth Status ─────────────────────────────────────────────────────
+
+export const EVENT_AUTH_STATUS = 'auth_status' as const;
+
+// ── Hook Lifecycle ──────────────────────────────────────────────────
+
+export const EVENT_HOOK_STARTED = 'hook_started' as const;
+export const EVENT_HOOK_PROGRESS = 'hook_progress' as const;
+export const EVENT_HOOK_RESPONSE = 'hook_response' as const;
+
+// ── File Persistence ────────────────────────────────────────────────
+
+export const EVENT_FILES_PERSISTED = 'files_persisted' as const;
+
+// ── Context Compaction ──────────────────────────────────────────────
+
+export const EVENT_COMPACT_BOUNDARY = 'compact_boundary' as const;
+
+// ── Local Command Output ────────────────────────────────────────────
+
+export const EVENT_LOCAL_COMMAND_OUTPUT = 'local_command_output' as const;
+
 // ── System Event Subtypes ───────────────────────────────────────────
 
 export const SYSTEM_STDERR = 'stderr' as const;
@@ -195,7 +222,7 @@ export const KEY_SUBTYPE = 'subtype' as const;
 
 // ── Error Class Names ───────────────────────────────────────────────
 
-export const ERR_NAME_BASE = 'ClaudeConnectorError' as const;
+export const ERR_NAME_BASE = 'KraubeKonnektorError' as const;
 export const ERR_NAME_NOT_FOUND = 'CliNotFoundError' as const;
 export const ERR_NAME_EXECUTION = 'CliExecutionError' as const;
 export const ERR_NAME_TIMEOUT = 'CliTimeoutError' as const;

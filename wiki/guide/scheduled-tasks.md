@@ -11,7 +11,7 @@ import {
   SCHED_ERROR,
   SCHED_TICK,
   SCHED_STOP,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 

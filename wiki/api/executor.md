@@ -3,7 +3,7 @@
 The core abstraction interface that decouples the public API from the underlying transport mechanism. All interaction with Claude Code goes through an executor.
 
 ```typescript
-import type { IExecutor } from '@scottwalker/claude-connector'
+import type { IExecutor } from '@scottwalker/kraube-konnektor'
 ```
 
 ## Why This Abstraction Exists
@@ -85,7 +85,7 @@ interface ExecuteOptions {
 Executors must follow these rules:
 
 1. **Stateless per invocation** -- no mutable state between calls
-2. **Error handling** -- throw [`ClaudeConnectorError`](./errors) subclasses for error conditions
+2. **Error handling** -- throw [`KraubeKonnektorError`](./errors) subclasses for error conditions
 3. **Stream termination** -- `stream()` must yield a `'result'` or `'error'` event as the final event
 4. **Argument passthrough** -- `args` are fully resolved; the executor should not interpret or modify them
 
@@ -100,7 +100,7 @@ import {
   type IExecutor,
   type QueryResult,
   type StreamEvent,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 class HttpExecutor implements IExecutor {
   private controller: AbortController | null = null

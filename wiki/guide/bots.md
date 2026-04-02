@@ -6,7 +6,7 @@ Build chat bots powered by Claude Code.
 
 ```ts
 import TelegramBot from 'node-telegram-bot-api'
-import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 const claude = new Claude({ useSdk: false, permissionMode: PERMISSION_PLAN })
@@ -50,7 +50,7 @@ The throttle logic (`buffer.length % 200 < text.length`) prevents hitting Telegr
 
 ```ts
 import { App } from '@slack/bolt'
-import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const app = new App({
   token: process.env.SLACK_TOKEN!,

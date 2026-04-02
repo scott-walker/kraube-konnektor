@@ -5,7 +5,7 @@ A recurring query job that executes at a fixed interval. Created via [`claude.lo
 Implements the equivalent of Claude Code's `/loop` command at the Node.js level.
 
 ```typescript
-import { Claude, SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/claude-connector'
+import { Claude, SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const job = claude.loop('5m', 'Check if deployment finished')
@@ -63,7 +63,7 @@ job.on(SCHED_RESULT, (r) => {
 | `'stop'` | `SCHED_STOP` | `() => void` | When job is stopped |
 
 ```typescript
-import { SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/claude-connector'
+import { SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/kraube-konnektor'
 
 const job = claude.loop('10m', 'Run health check')
 

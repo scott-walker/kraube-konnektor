@@ -56,7 +56,7 @@ const result = await session.query('Try a different approach')
 ## Streaming in Sessions
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const session = claude.session()
@@ -75,7 +75,7 @@ const r2 = await session.query('Now fix the bugs you found')
 ### Streaming with Fluent API
 
 ```ts
-import { EVENT_TEXT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const session = claude.session()
 
@@ -140,7 +140,7 @@ List existing sessions and retrieve message history (SDK mode only):
 ### `listSessions` — Browse Past Sessions
 
 ```ts
-import { listSessions } from '@scottwalker/claude-connector'
+import { listSessions } from '@scottwalker/kraube-konnektor'
 
 const sessions = await listSessions({
   dir: '/home/user/project',
@@ -157,7 +157,7 @@ for (const s of sessions) {
 ### `getSessionMessages` — Read Session History
 
 ```ts
-import { getSessionMessages } from '@scottwalker/claude-connector'
+import { getSessionMessages } from '@scottwalker/kraube-konnektor'
 
 const messages = await getSessionMessages('abc-123-def-456', {
   dir: '/home/user/project',

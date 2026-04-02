@@ -48,7 +48,7 @@ import type {
   McpServerStatus,
   McpSetServersResult,
   RewindFilesResult,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 ## ClientOptions
@@ -242,9 +242,19 @@ type StreamEvent =
   | StreamResultEvent
   | StreamErrorEvent
   | StreamSystemEvent
+  | StreamRateLimitEvent
   | StreamTaskStartedEvent
   | StreamTaskProgressEvent
   | StreamTaskNotificationEvent
+  | StreamToolProgressEvent
+  | StreamToolUseSummaryEvent
+  | StreamAuthStatusEvent
+  | StreamHookStartedEvent
+  | StreamHookProgressEvent
+  | StreamHookResponseEvent
+  | StreamFilesPersistedEvent
+  | StreamCompactBoundaryEvent
+  | StreamLocalCommandOutputEvent
 ```
 
 | Type | Constant | Key Fields |
@@ -257,6 +267,15 @@ type StreamEvent =
 | `StreamTaskStartedEvent` | `EVENT_TASK_STARTED` | `taskId`, `description`, `taskType?`, `prompt?` |
 | `StreamTaskProgressEvent` | `EVENT_TASK_PROGRESS` | `taskId`, `description`, `usage`, `summary?` |
 | `StreamTaskNotificationEvent` | `EVENT_TASK_NOTIFICATION` | `taskId`, `status`, `outputFile`, `summary` |
+| `StreamToolProgressEvent` | `EVENT_TOOL_PROGRESS` | `toolUseId`, `toolName`, `elapsedTimeSeconds` |
+| `StreamToolUseSummaryEvent` | `EVENT_TOOL_USE_SUMMARY` | `summary`, `precedingToolUseIds` |
+| `StreamAuthStatusEvent` | `EVENT_AUTH_STATUS` | `isAuthenticating`, `output`, `error?` |
+| `StreamHookStartedEvent` | `EVENT_HOOK_STARTED` | `hookId`, `hookName`, `hookEvent` |
+| `StreamHookProgressEvent` | `EVENT_HOOK_PROGRESS` | `hookId`, `hookName`, `stdout`, `stderr` |
+| `StreamHookResponseEvent` | `EVENT_HOOK_RESPONSE` | `hookId`, `hookName`, `outcome`, `exitCode?` |
+| `StreamFilesPersistedEvent` | `EVENT_FILES_PERSISTED` | `files`, `failed`, `processedAt` |
+| `StreamCompactBoundaryEvent` | `EVENT_COMPACT_BOUNDARY` | `trigger`, `preTokens` |
+| `StreamLocalCommandOutputEvent` | `EVENT_LOCAL_COMMAND_OUTPUT` | `content` |
 
 ### StreamTextEvent
 
@@ -597,7 +616,7 @@ interface McpServerConfig {
 | `headers` | `Record<string, string>` | HTTP headers for http/sse servers |
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   mcpServers: {
@@ -664,7 +683,7 @@ interface AgentConfig {
 | `background` | `boolean` | Always run as background task |
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {

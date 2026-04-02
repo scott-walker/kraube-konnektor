@@ -3,7 +3,7 @@
 Main client class. Entry point for all interactions with Claude Code CLI.
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 ```
 
 ## Constructor
@@ -20,7 +20,7 @@ new Claude(options?: ClientOptions, executor?: IExecutor)
 When `useSdk` is `true` (the default), the client creates an `SdkExecutor` that maintains a persistent SDK session. Set `useSdk: false` to use CLI mode where each query spawns a new process.
 
 ```typescript
-import { Claude, PERMISSION_PLAN, EFFORT_HIGH } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN, EFFORT_HIGH } from '@scottwalker/kraube-konnektor'
 
 // SDK mode (default) — persistent session, faster subsequent queries
 const claude = new Claude({
@@ -51,7 +51,7 @@ Execute a one-shot query and wait for the complete result.
 **Returns:** `Promise<`[`QueryResult`](./types#queryresult)`>`
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Find bugs in auth.ts', {
@@ -83,7 +83,7 @@ Execute a query with real-time streaming output. Returns a [`StreamHandle`](./st
 ```typescript
 import {
   Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -129,7 +129,7 @@ Open a bidirectional streaming channel -- a persistent CLI process for multi-tur
 **Returns:** [`ChatHandle`](./chat-handle)
 
 ```typescript
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 const chat = claude.chat()
@@ -177,7 +177,7 @@ Schedule a recurring query (equivalent of CLI `/loop`). Executes immediately on 
 **Returns:** [`ScheduledJob`](./scheduled-job)
 
 ```typescript
-import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/claude-connector'
+import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const job = claude.loop('5m', 'Check if deployment finished')
@@ -203,7 +203,7 @@ Run multiple independent queries concurrently. All queries run in parallel using
 **Returns:** `Promise<QueryResult[]>`
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const [bugs, docs] = await claude.parallel([
@@ -394,7 +394,7 @@ Subscribe to initialization events. Only relevant when `useSdk: true`.
 `InitStage` is one of: `'importing'`, `'creating'`, `'connecting'`, `'ready'`.
 
 ```typescript
-import { Claude, INIT_EVENT_STAGE, INIT_EVENT_READY } from '@scottwalker/claude-connector'
+import { Claude, INIT_EVENT_STAGE, INIT_EVENT_READY } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 claude.on(INIT_EVENT_STAGE, (stage, msg) => console.log(`[${stage}] ${msg}`))

@@ -1,12 +1,12 @@
 /**
- * # claude-connector
+ * # kraube-konnektor
  *
  * Programmatic Node.js interface for Claude Code CLI.
  *
  * ## Quick start
  *
  * ```ts
- * import { Claude } from '@scottwalker/claude-connector'
+ * import { Claude } from '@scottwalker/kraube-konnektor'
  *
  * const claude = new Claude({ model: 'sonnet' })
  * const result = await claude.query('Find bugs in auth.ts')
@@ -59,7 +59,7 @@ export { parseStreamLine } from './parser/stream-parser.js';
 
 // ── Errors ────────────────────────────────────────────────────────
 export {
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
@@ -83,6 +83,27 @@ export {
 
   // Rate limit
   EVENT_RATE_LIMIT,
+
+  // Tool progress & summary
+  EVENT_TOOL_PROGRESS,
+  EVENT_TOOL_USE_SUMMARY,
+
+  // Auth status
+  EVENT_AUTH_STATUS,
+
+  // Hook lifecycle
+  EVENT_HOOK_STARTED,
+  EVENT_HOOK_PROGRESS,
+  EVENT_HOOK_RESPONSE,
+
+  // File persistence
+  EVENT_FILES_PERSISTED,
+
+  // Context compaction
+  EVENT_COMPACT_BOUNDARY,
+
+  // Local command output
+  EVENT_LOCAL_COMMAND_OUTPUT,
 
   // Permission modes
   PERMISSION_DEFAULT,
@@ -170,6 +191,21 @@ export type {
   StreamTaskProgressEvent,
   StreamTaskNotificationEvent,
   StreamRateLimitEvent,
+  // Tool progress & summary
+  StreamToolProgressEvent,
+  StreamToolUseSummaryEvent,
+  // Auth status
+  StreamAuthStatusEvent,
+  // Hook lifecycle
+  StreamHookStartedEvent,
+  StreamHookProgressEvent,
+  StreamHookResponseEvent,
+  // File persistence
+  StreamFilesPersistedEvent,
+  // Context compaction
+  StreamCompactBoundaryEvent,
+  // Local command output
+  StreamLocalCommandOutputEvent,
   // Info types
   AccountInfo,
   ModelInfo,
@@ -198,7 +234,7 @@ export type {
  *
  * @example
  * ```ts
- * import { createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+ * import { createSdkMcpServer, sdkTool } from '@scottwalker/kraube-konnektor'
  * import { z } from 'zod/v4'
  *
  * const server = createSdkMcpServer({
@@ -227,7 +263,7 @@ export async function createSdkMcpServer(options: {
  *
  * @example
  * ```ts
- * import { sdkTool } from '@scottwalker/claude-connector'
+ * import { sdkTool } from '@scottwalker/kraube-konnektor'
  * import { z } from 'zod/v4'
  *
  * const myTool = await sdkTool('greet', 'Say hello', { name: z.string() },

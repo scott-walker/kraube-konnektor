@@ -8,7 +8,7 @@
 ## Install
 
 ```bash
-npm install @scottwalker/claude-connector
+npm install @scottwalker/kraube-konnektor
 ```
 
 ## CLI Setup (optional)
@@ -16,7 +16,7 @@ npm install @scottwalker/claude-connector
 Bootstrap Claude Code on a fresh server with one command:
 
 ```bash
-npx @scottwalker/claude-connector setup
+npx @scottwalker/kraube-konnektor setup
 ```
 
 This will check Node.js, install Claude Code, configure a config directory and proxy, authenticate, and print a ready-to-use code example.
@@ -24,7 +24,7 @@ This will check Node.js, install Claude Code, configure a config directory and p
 Use `--proxy` for servers behind a proxy:
 
 ```bash
-npx @scottwalker/claude-connector setup --proxy "http://user:pass@host:port"
+npx @scottwalker/kraube-konnektor setup --proxy "http://user:pass@host:port"
 ```
 
 Per-instance isolation (no global env vars needed):
@@ -42,7 +42,7 @@ const claude = new Claude({
 All examples use ESM imports:
 
 ```ts
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 ```
 
 ## Quick Start
@@ -50,7 +50,7 @@ import { Claude } from '@scottwalker/claude-connector'
 ### Simple Query
 
 ```ts
-import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ permissionMode: PERMISSION_ACCEPT_EDITS })
 
@@ -65,7 +65,7 @@ console.log(result.usage)       // { inputTokens, outputTokens }
 Real-time output as Claude works:
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const text = await claude.stream('Summarize README.md').text()
@@ -77,7 +77,7 @@ console.log(text)
 Bidirectional streaming for interactive conversations:
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -139,7 +139,7 @@ import {
   INIT_EVENT_STAGE,
   INIT_EVENT_READY,
   INIT_EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ model: 'sonnet' })
 
@@ -172,7 +172,7 @@ claude.close()
 ### Custom Executable
 
 ```ts
-import { Claude, DEFAULT_EXECUTABLE } from '@scottwalker/claude-connector'
+import { Claude, DEFAULT_EXECUTABLE } from '@scottwalker/kraube-konnektor'
 
 // Default executable is 'claude'
 console.log(DEFAULT_EXECUTABLE) // 'claude'

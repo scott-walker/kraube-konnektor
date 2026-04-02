@@ -6,7 +6,7 @@ Stream Claude's responses directly into HTTP servers, SSE endpoints, and WebSock
 
 ```ts
 import express from 'express'
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const app = express()
 const claude = new Claude({ useSdk: false })
@@ -33,7 +33,7 @@ app.get('/ai/query', async (req, res) => {
 
 ```ts
 import Fastify from 'fastify'
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const app = Fastify()
 const claude = new Claude({ useSdk: false })
@@ -60,7 +60,7 @@ import {
   EVENT_TOOL_USE,
   EVENT_RESULT,
   EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 app.get('/ai/sse', (req, res) => {
   res.writeHead(200, {
@@ -115,7 +115,7 @@ import {
   EVENT_TEXT,
   EVENT_TOOL_USE,
   EVENT_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const wss = new WebSocketServer({ port: 8080 })
 const claude = new Claude({ useSdk: false })

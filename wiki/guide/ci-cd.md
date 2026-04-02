@@ -9,7 +9,7 @@ import {
   EVENT_TEXT,
   EVENT_TOOL_USE,
   PERMISSION_ACCEPT_EDITS,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const reportStream = createWriteStream('ci-report.txt')
@@ -50,7 +50,7 @@ Main process to renderer streaming via IPC:
 ```ts
 // main.ts (Electron main process)
 import { ipcMain } from 'electron'
-import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -95,7 +95,7 @@ Offload streaming to a worker to keep the main thread free:
 ```ts
 // worker.ts
 import { parentPort, workerData } from 'node:worker_threads'
-import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 

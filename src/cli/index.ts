@@ -4,9 +4,9 @@ import { Command } from 'commander';
 import { setup } from './commands/setup.js';
 
 const program = new Command()
-  .name('claude-connector')
+  .name('kraube-konnektor')
   .description('CLI for Claude Connector — quick setup & management')
-  .version('0.5.4');
+  .version('0.6.0');
 
 program
   .command('setup')

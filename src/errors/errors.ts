@@ -8,18 +8,18 @@ import {
 } from '../constants.js';
 
 /**
- * Base error class for all claude-connector errors.
+ * Base error class for all kraube-konnektor errors.
  *
  * Consumers can catch this to handle any library error uniformly:
  * ```ts
  * try {
  *   await claude.query('...')
  * } catch (e) {
- *   if (e instanceof ClaudeConnectorError) { ... }
+ *   if (e instanceof KraubeKonnektorError) { ... }
  * }
  * ```
  */
-export class ClaudeConnectorError extends Error {
+export class KraubeKonnektorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = ERR_NAME_BASE;
@@ -29,7 +29,7 @@ export class ClaudeConnectorError extends Error {
 /**
  * Thrown when the Claude Code CLI binary cannot be found at the specified path.
  */
-export class CliNotFoundError extends ClaudeConnectorError {
+export class CliNotFoundError extends KraubeKonnektorError {
   readonly executable: string;
 
   constructor(executable: string) {
@@ -46,7 +46,7 @@ export class CliNotFoundError extends ClaudeConnectorError {
 /**
  * Thrown when the CLI process exits with a non-zero code.
  */
-export class CliExecutionError extends ClaudeConnectorError {
+export class CliExecutionError extends KraubeKonnektorError {
   readonly exitCode: number;
   readonly stderr: string;
 
@@ -61,7 +61,7 @@ export class CliExecutionError extends ClaudeConnectorError {
 /**
  * Thrown when the CLI process exceeds the configured timeout.
  */
-export class CliTimeoutError extends ClaudeConnectorError {
+export class CliTimeoutError extends KraubeKonnektorError {
   readonly timeoutMs: number;
 
   constructor(timeoutMs: number) {
@@ -74,7 +74,7 @@ export class CliTimeoutError extends ClaudeConnectorError {
 /**
  * Thrown when CLI output cannot be parsed (unexpected format).
  */
-export class ParseError extends ClaudeConnectorError {
+export class ParseError extends KraubeKonnektorError {
   readonly rawOutput: string;
 
   constructor(message: string, rawOutput: string) {
@@ -87,7 +87,7 @@ export class ParseError extends ClaudeConnectorError {
 /**
  * Thrown when invalid options are provided to the client.
  */
-export class ValidationError extends ClaudeConnectorError {
+export class ValidationError extends KraubeKonnektorError {
   readonly field: string;
 
   constructor(field: string, message: string) {

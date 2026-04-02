@@ -9,7 +9,7 @@ import {
   Claude,
   PERMISSION_PLAN,
   PERMISSION_ACCEPT_EDITS,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {
@@ -76,7 +76,7 @@ Agents are a powerful way to create specialized workflows. A `reviewer` agent wi
 You can stop a running subagent task by its task ID. This is useful when a long-running agent needs to be cancelled programmatically:
 
 ```ts
-import { Claude, EVENT_TASK_STARTED } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TASK_STARTED } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {
@@ -115,7 +115,7 @@ import {
   EVENT_TASK_STARTED,
   EVENT_TASK_PROGRESS,
   EVENT_TASK_NOTIFICATION,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {

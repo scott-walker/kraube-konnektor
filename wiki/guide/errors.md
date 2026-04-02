@@ -1,11 +1,11 @@
 # Error Handling
 
-All library errors extend `ClaudeConnectorError` for uniform catching.
+All library errors extend `KraubeKonnektorError` for uniform catching.
 
 ## Error Hierarchy
 
 ```
-ClaudeConnectorError          Base class (catch-all)
+KraubeKonnektorError          Base class (catch-all)
 ├── CliNotFoundError          Binary not found (ERR_ENOENT)
 ├── CliExecutionError         Non-zero exit code
 ├── CliTimeoutError           Process exceeded DEFAULT_TIMEOUT_MS
@@ -15,9 +15,9 @@ ClaudeConnectorError          Base class (catch-all)
 
 ## Error Classes
 
-### ClaudeConnectorError
+### KraubeKonnektorError
 
-Base class for all library errors. Catch this to handle any error from claude-connector.
+Base class for all library errors. Catch this to handle any error from kraube-konnektor.
 
 ### CliNotFoundError
 
@@ -55,13 +55,13 @@ Thrown when invalid options or input are provided.
 ```ts
 import {
   Claude,
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -84,7 +84,7 @@ try {
   } else if (err instanceof ValidationError) {
     // Invalid options
     console.error(`Invalid field: ${err.field}`)
-  } else if (err instanceof ClaudeConnectorError) {
+  } else if (err instanceof KraubeKonnektorError) {
     // Catch-all for any library error
     console.error(err.message)
   }
@@ -100,7 +100,7 @@ import {
   CliTimeoutError,
   EVENT_TEXT,
   EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.stream('Do something')

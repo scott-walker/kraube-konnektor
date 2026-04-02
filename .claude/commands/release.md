@@ -1,6 +1,6 @@
-# Release — publish a new version of claude-connector
+# Release — publish a new version of kraube-konnektor
 
-You are performing a full release of the `@scottwalker/claude-connector` package.
+You are performing a full release of the `@scottwalker/kraube-konnektor` package.
 
 ## Input
 

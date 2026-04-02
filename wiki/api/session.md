@@ -5,7 +5,7 @@ Multi-turn conversation wrapper that maintains context across queries. Created v
 Each query in the session automatically resumes the same conversation using `--resume` with the session ID from the first query.
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const session = claude.session()
@@ -45,7 +45,7 @@ Execute a query within the session context. Same signature as [`claude.query()`]
 After the first query, subsequent queries use `--resume` with the session ID to maintain conversation history.
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const session = claude.session()
 const r1 = await session.query('Find all TODO comments')
@@ -63,7 +63,7 @@ stream(prompt: string, options?: QueryOptions): StreamHandle
 Execute a streaming query within the session context. Returns a [`StreamHandle`](./stream-handle) that continues the session.
 
 ```typescript
-import { EVENT_TEXT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const session = claude.session()
 

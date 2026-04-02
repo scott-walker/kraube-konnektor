@@ -2,7 +2,7 @@
 
 ## Overview
 
-`claude-connector` is a programmatic Node.js interface for Claude Code. It supports two execution modes: **SDK mode** (default, uses the Claude Agent SDK in-process) and **CLI mode** (spawns `claude -p` per query). The SDK provides a clean TypeScript API for building integrations with persistent sessions, control methods, and programmatic permission handling.
+`kraube-konnektor` is a programmatic Node.js interface for Claude Code. It supports two execution modes: **SDK mode** (default, uses the Claude Agent SDK in-process) and **CLI mode** (spawns `claude -p` per query). The SDK provides a clean TypeScript API for building integrations with persistent sessions, control methods, and programmatic permission handling.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -154,7 +154,7 @@ The central abstraction that decouples the public API from the transport mechani
 - `abort()` → `void` (cancel running execution)
 
 **Invariants**:
-- Error conditions throw `ClaudeConnectorError` subclasses
+- Error conditions throw `KraubeKonnektorError` subclasses
 - Arguments are fully resolved (no option merging in the executor)
 
 ### SdkExecutor (executor/sdk-executor.ts)
@@ -410,7 +410,7 @@ Use `stopTask(taskId)` to cancel a running task.
 ## Error Handling Strategy
 
 ```
-ClaudeConnectorError          Base class (catch-all)
+KraubeKonnektorError          Base class (catch-all)
 ├── CliNotFoundError          Binary not found (ERR_ENOENT)
 ├── CliExecutionError         Non-zero exit code
 ├── CliTimeoutError           Process exceeded DEFAULT_TIMEOUT_MS

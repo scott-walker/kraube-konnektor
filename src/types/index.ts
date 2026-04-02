@@ -48,6 +48,21 @@ export type {
   StreamTaskProgressEvent,
   StreamTaskNotificationEvent,
   StreamRateLimitEvent,
+  // Tool progress & summary
+  StreamToolProgressEvent,
+  StreamToolUseSummaryEvent,
+  // Auth status
+  StreamAuthStatusEvent,
+  // Hook lifecycle
+  StreamHookStartedEvent,
+  StreamHookProgressEvent,
+  StreamHookResponseEvent,
+  // File persistence
+  StreamFilesPersistedEvent,
+  // Context compaction
+  StreamCompactBoundaryEvent,
+  // Local command output
+  StreamLocalCommandOutputEvent,
   // Info types
   AccountInfo,
   ModelInfo,

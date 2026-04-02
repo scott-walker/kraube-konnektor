@@ -76,7 +76,7 @@ With `strictMcpConfig: true`, any MCP servers configured globally or in project 
 Define custom tools that run inside your Node.js process using `createSdkMcpServer` and `sdkTool` (SDK mode only):
 
 ```ts
-import { Claude, createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+import { Claude, createSdkMcpServer, sdkTool } from '@scottwalker/kraube-konnektor'
 import { z } from 'zod/v4'
 
 const server = await createSdkMcpServer({

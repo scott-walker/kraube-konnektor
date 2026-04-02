@@ -8,13 +8,13 @@ Programmatic Node.js interface for [Claude Code](https://docs.anthropic.com/en/d
 
 Use Claude Code from your application code — no terminal required. Works with your existing Max/Team/Enterprise subscription.
 
-**[Website](https://scott-walker.github.io/claude-connector/)** | **[Examples](./docs/EXAMPLES.md)** | **[API Reference](./docs/API.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
+**[Website](https://scott-walker.github.io/kraube-konnektor/)** | **[Examples](./docs/EXAMPLES.md)** | **[API Reference](./docs/API.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
 
 ---
 
 ## Why
 
-Claude Code is a powerful AI coding agent, but it only runs in a terminal. **claude-connector** turns it into a programmable API — so you can embed it into CI pipelines, build custom tools, orchestrate multi-agent workflows, or integrate it with any Node.js application.
+Claude Code is a powerful AI coding agent, but it only runs in a terminal. **kraube-konnektor** turns it into a programmable API — so you can embed it into CI pipelines, build custom tools, orchestrate multi-agent workflows, or integrate it with any Node.js application.
 
 **Key design decisions:**
 
@@ -32,7 +32,7 @@ Claude Code is a powerful AI coding agent, but it only runs in a terminal. **cla
 ## Install
 
 ```bash
-npm install @scottwalker/claude-connector
+npm install @scottwalker/kraube-konnektor
 ```
 
 ## CLI Setup
@@ -40,7 +40,7 @@ npm install @scottwalker/claude-connector
 Bootstrap Claude Code on a fresh server with a single command:
 
 ```bash
-npx @scottwalker/claude-connector setup
+npx @scottwalker/kraube-konnektor setup
 ```
 
 The setup wizard will:
@@ -54,7 +54,7 @@ The setup wizard will:
 Use `--proxy` to skip the interactive proxy prompt:
 
 ```bash
-npx @scottwalker/claude-connector setup --proxy "http://user:pass@host:port"
+npx @scottwalker/kraube-konnektor setup --proxy "http://user:pass@host:port"
 ```
 
 Each instance can have its own config directory and proxy — no global environment variables needed:
@@ -72,7 +72,7 @@ const claude = new Claude({
 ## Quick Start
 
 ```typescript
-import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ permissionMode: PERMISSION_ACCEPT_EDITS })
 
@@ -90,7 +90,7 @@ console.log(result.usage)       // { inputTokens, outputTokens }
 Point to a specific Claude Code installation when multiple versions coexist:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   executable: '/opt/claude-code/v2/bin/claude',
@@ -106,7 +106,7 @@ Real-time output as Claude works. `stream()` returns a `StreamHandle` — use th
 import {
   Claude,
   EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -146,7 +146,7 @@ for await (const event of handle) {
 Maintain conversation context across queries:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const session = claude.session()
@@ -167,7 +167,7 @@ const s3 = claude.session({ resume: session.sessionId!, fork: true })
 Get typed JSON responses via JSON Schema:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Extract all API endpoints from the codebase', {
@@ -197,7 +197,7 @@ console.log(result.structured)
 Run independent queries concurrently (each spawns a separate CLI process):
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -213,7 +213,7 @@ const [bugs, tests, docs] = await claude.parallel([
 Node.js-level equivalent of the `/loop` CLI command:
 
 ```typescript
-import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/claude-connector'
+import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const job = claude.loop('5m', 'Check CI pipeline status and report failures')
@@ -237,7 +237,7 @@ Supported intervals: `'30s'`, `'5m'`, `'2h'`, `'1d'`, or raw milliseconds.
 Connect Model Context Protocol servers:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 // SDK mode (default) — inline definitions
 const claude = new Claude({
@@ -265,7 +265,7 @@ const cliClaude = new Claude({
 Define specialized agents:
 
 ```typescript
-import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_ACCEPT_EDITS } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {
@@ -289,7 +289,7 @@ const claude = new Claude({
 Run operations in an isolated copy of the repository:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Refactor the entire auth module', {
@@ -303,7 +303,7 @@ Pass data alongside the prompt (like `echo data | claude -p "prompt"`):
 
 ```typescript
 import { readFileSync } from 'node:fs'
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Analyze this error log and suggest fixes', {
@@ -316,7 +316,7 @@ const result = await claude.query('Analyze this error log and suggest fixes', {
 Attach hooks to tool execution:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   hooks: {
@@ -341,7 +341,7 @@ const claude = new Claude({
 Control tool approval with a callback instead of static permission modes:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   canUseTool: async (toolName, input, { signal }) => {
@@ -357,7 +357,7 @@ const claude = new Claude({
 Define custom tools that run in-process — no external MCP server required:
 
 ```typescript
-import { Claude, createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+import { Claude, createSdkMcpServer, sdkTool } from '@scottwalker/kraube-konnektor'
 import { z } from 'zod/v4'
 
 const server = await createSdkMcpServer({
@@ -378,7 +378,7 @@ const claude = new Claude({ mcpServers: { myTools: server } })
 Subscribe to all 21 hook events with native JS callbacks (no shell commands):
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   hookCallbacks: {
@@ -405,7 +405,7 @@ const claude = new Claude({
 Control Claude's reasoning behavior:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ thinking: { type: 'enabled' } })
 // 'adaptive' — Claude decides | 'enabled' — always think | 'disabled' — no thinking
@@ -416,7 +416,7 @@ const claude = new Claude({ thinking: { type: 'enabled' } })
 Change model or permission mode during a session:
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ model: 'sonnet' })
 claude.setModel('opus')                       // switch to a more capable model
@@ -504,7 +504,7 @@ const claude = new Claude({
 Override how Claude Code processes are created — useful for VMs, containers, or remote execution:
 
 ```typescript
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   spawnClaudeCodeProcess: (options) => {
@@ -523,7 +523,7 @@ const claude = new Claude({
 List and inspect past sessions:
 
 ```typescript
-import { listSessions, getSessionMessages } from '@scottwalker/claude-connector'
+import { listSessions, getSessionMessages } from '@scottwalker/kraube-konnektor'
 
 const sessions = await listSessions({ limit: 10 })                  // all session IDs + metadata
 const messages = await getSessionMessages(sessions[0].sessionId)    // full message history
@@ -537,7 +537,7 @@ All Claude Code CLI capabilities in one place:
 import {
   Claude,
   EFFORT_HIGH, PERMISSION_ACCEPT_EDITS, PERMISSION_PLAN,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   // CLI binary
@@ -594,18 +594,18 @@ const result = await claude.query('Analyze this module', {
 
 ## Error Handling
 
-All errors extend `ClaudeConnectorError` for uniform catching:
+All errors extend `KraubeKonnektorError` for uniform catching:
 
 ```typescript
 import {
   Claude,
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -624,7 +624,7 @@ try {
   } else if (err instanceof ParseError) {
     // Unexpected CLI output
     console.error(`Parse failed: ${err.rawOutput.slice(0, 100)}`)
-  } else if (err instanceof ClaudeConnectorError) {
+  } else if (err instanceof KraubeKonnektorError) {
     // Any other library error
     console.error(err.message)
   }
@@ -639,7 +639,7 @@ The `IExecutor` abstraction lets you swap the CLI backend for testing, mocking, 
 import {
   Claude, EVENT_TEXT, EVENT_RESULT,
   type IExecutor, type ExecuteOptions, type QueryResult, type StreamEvent,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 class MockExecutor implements IExecutor {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {
@@ -719,8 +719,8 @@ npm run stream     # streaming mode (word by word)
 ## Development
 
 ```bash
-git clone git@github.com:scott-walker/claude-connector.git
-cd claude-connector
+git clone git@github.com:scott-walker/kraube-konnektor.git
+cd kraube-konnektor
 npm install
 
 npm run build              # compile TypeScript

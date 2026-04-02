@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-04-03
+
+### Changed
+
+- **Rebrand** — package renamed from `@scottwalker/claude-connector` to `@scottwalker/kraube-konnektor`. CLI binary, error classes (`KraubeKonnektorError`), all docs and examples updated. A backwards-compatible wrapper package is available at `compat/` for the old name.
+- **Init without probe message** — replaced the `"."` probe message with `initializationResult()` SDK method. No more phantom sessions created during warm-up.
+- **Landing page font** — heading font changed from Bangers to Underdog.
+
+### Added
+
+- **9 new typed StreamEvent types** for full SDK message coverage:
+  - `StreamToolProgressEvent` — tool execution progress (toolName, elapsedTimeSeconds)
+  - `StreamToolUseSummaryEvent` — AI-generated summary of tool usage
+  - `StreamAuthStatusEvent` — MCP authentication status
+  - `StreamHookStartedEvent` / `StreamHookProgressEvent` / `StreamHookResponseEvent` — hook lifecycle
+  - `StreamFilesPersistedEvent` — file checkpoint events
+  - `StreamCompactBoundaryEvent` — context compaction events
+  - `StreamLocalCommandOutputEvent` — output from slash commands (/voice, /cost, etc.)
+- **9 new EVENT_* constants** — `EVENT_TOOL_PROGRESS`, `EVENT_TOOL_USE_SUMMARY`, `EVENT_AUTH_STATUS`, `EVENT_HOOK_STARTED`, `EVENT_HOOK_PROGRESS`, `EVENT_HOOK_RESPONSE`, `EVENT_FILES_PERSISTED`, `EVENT_COMPACT_BOUNDARY`, `EVENT_LOCAL_COMMAND_OUTPUT`
+
 ## [0.5.4] - 2026-03-29
 
 ### Fixed
@@ -30,14 +50,14 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- **`bin` entry point** — fixed invalid script path format that caused npm to strip the `claude-connector` binary during publish
+- **`bin` entry point** — fixed invalid script path format that caused npm to strip the `kraube-konnektor` binary during publish
 
 ## [0.5.0] - 2026-03-29
 
 ### Added
 
 - **CLI `setup` command** — one-command bootstrap for fresh servers: checks Node.js version, installs Claude Code globally, runs `claude login` for authentication, and verifies the result
-- **`bin` entry point** — package now provides `claude-connector` executable via `npx @scottwalker/claude-connector setup`
+- **`bin` entry point** — package now provides `kraube-konnektor` executable via `npx @scottwalker/kraube-konnektor setup`
 - **`/release` dev command** — Claude Code slash command that automates the full release process (version bump, changelogs, build, publish, GitHub release)
 
 ### Changed

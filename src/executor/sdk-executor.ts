@@ -20,7 +20,6 @@ import {
   INIT_EVENT_STAGE,
   INIT_EVENT_READY,
   INIT_EVENT_ERROR,
-  SYSTEM_INIT,
   EVENT_SYSTEM,
   EVENT_RESULT,
   EVENT_TEXT,
@@ -29,6 +28,15 @@ import {
   EVENT_TASK_PROGRESS,
   EVENT_TASK_NOTIFICATION,
   EVENT_RATE_LIMIT,
+  EVENT_TOOL_PROGRESS,
+  EVENT_TOOL_USE_SUMMARY,
+  EVENT_AUTH_STATUS,
+  EVENT_HOOK_STARTED,
+  EVENT_HOOK_PROGRESS,
+  EVENT_HOOK_RESPONSE,
+  EVENT_FILES_PERSISTED,
+  EVENT_COMPACT_BOUNDARY,
+  EVENT_LOCAL_COMMAND_OUTPUT,
   SDK_RATE_LIMIT_EVENT,
   ROLE_ASSISTANT,
   KEY_MESSAGE,
@@ -45,8 +53,6 @@ import {
   KEY_OUTPUT_TOKENS,
   KEY_TOTAL_COST,
   KEY_DURATION,
-  KEY_MODEL,
-  KEY_TOOLS,
   KEY_SUBTYPE,
   KEY_STRUCTURED_OUTPUT,
   FLAGS_WITH_VALUE,
@@ -510,24 +516,19 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
         options: sdkOptions,
       });
 
-      // Stage 3: Wait for init message
+      // Stage 3: Wait for initialization via SDK control protocol
       this.emit(INIT_EVENT_STAGE, INIT_CONNECTING, 'Waiting for Claude Code to initialize...');
 
-      // Send initial message to trigger initialization
-      this.inputController.push('.');
+      // Use initializationResult() instead of sending a probe message.
+      // This retrieves readiness data (models, commands, account) through
+      // the SDK's control protocol without creating a phantom session.
+      const initResult = await this.activeQuery!.initializationResult();
 
-      // Use manual .next() to avoid closing the generator via for-await's return().
-      await readUntilResult(this.activeQuery!, (msg) => {
-        if (msg.type === EVENT_SYSTEM && KEY_SUBTYPE in msg && (msg as Record<string, unknown>)[KEY_SUBTYPE] === SYSTEM_INIT) {
-          const sysMsg = msg as Record<string, unknown>;
-          this.emit(
-            INIT_EVENT_STAGE,
-            INIT_CONNECTING,
-            `Connected: model=${sysMsg[KEY_MODEL]}, tools=${(sysMsg[KEY_TOOLS] as string[] | undefined)?.length ?? 0}`,
-          );
-        }
-        return msg.type === EVENT_RESULT;
-      });
+      this.emit(
+        INIT_EVENT_STAGE,
+        INIT_CONNECTING,
+        `Connected: model=${initResult.models?.[0]?.value ?? 'unknown'}, commands=${initResult.commands?.length ?? 0}`,
+      );
 
       // Stage 4: Ready
       this._ready = true;
@@ -656,6 +657,72 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
           };
         }
 
+        // Hook lifecycle events
+        if (subtype === 'hook_started') {
+          return {
+            type: EVENT_HOOK_STARTED,
+            hookId: String(sysMsg['hook_id'] ?? ''),
+            hookName: String(sysMsg['hook_name'] ?? ''),
+            hookEvent: String(sysMsg['hook_event'] ?? ''),
+          };
+        }
+
+        if (subtype === 'hook_progress') {
+          return {
+            type: EVENT_HOOK_PROGRESS,
+            hookId: String(sysMsg['hook_id'] ?? ''),
+            hookName: String(sysMsg['hook_name'] ?? ''),
+            hookEvent: String(sysMsg['hook_event'] ?? ''),
+            stdout: String(sysMsg['stdout'] ?? ''),
+            stderr: String(sysMsg['stderr'] ?? ''),
+            output: String(sysMsg['output'] ?? ''),
+          };
+        }
+
+        if (subtype === 'hook_response') {
+          return {
+            type: EVENT_HOOK_RESPONSE,
+            hookId: String(sysMsg['hook_id'] ?? ''),
+            hookName: String(sysMsg['hook_name'] ?? ''),
+            hookEvent: String(sysMsg['hook_event'] ?? ''),
+            output: String(sysMsg['output'] ?? ''),
+            stdout: String(sysMsg['stdout'] ?? ''),
+            stderr: String(sysMsg['stderr'] ?? ''),
+            exitCode: typeof sysMsg['exit_code'] === 'number' ? sysMsg['exit_code'] : undefined,
+            outcome: (sysMsg['outcome'] as 'success' | 'error' | 'cancelled') ?? 'success',
+          };
+        }
+
+        // File persistence checkpoint
+        if (subtype === 'files_persisted') {
+          const rawFiles = (sysMsg['files'] ?? []) as Array<Record<string, unknown>>;
+          const rawFailed = (sysMsg['failed'] ?? []) as Array<Record<string, unknown>>;
+          return {
+            type: EVENT_FILES_PERSISTED,
+            files: rawFiles.map((f) => ({ filename: String(f['filename'] ?? ''), fileId: String(f['file_id'] ?? '') })),
+            failed: rawFailed.map((f) => ({ filename: String(f['filename'] ?? ''), error: String(f['error'] ?? '') })),
+            processedAt: String(sysMsg['processed_at'] ?? ''),
+          };
+        }
+
+        // Context compaction boundary
+        if (subtype === 'compact_boundary') {
+          const meta = (sysMsg['compact_metadata'] ?? {}) as Record<string, unknown>;
+          return {
+            type: EVENT_COMPACT_BOUNDARY,
+            trigger: (meta['trigger'] as 'manual' | 'auto') ?? 'auto',
+            preTokens: typeof meta['pre_tokens'] === 'number' ? meta['pre_tokens'] : 0,
+          };
+        }
+
+        // Local slash command output (/voice, /cost, etc.)
+        if (subtype === 'local_command_output') {
+          return {
+            type: EVENT_LOCAL_COMMAND_OUTPUT,
+            content: String(sysMsg['content'] ?? ''),
+          };
+        }
+
         // Generic system event
         return {
           type: EVENT_SYSTEM,
@@ -674,6 +741,40 @@ export class SdkExecutor extends EventEmitter<SdkExecutorEvents> implements IExe
           rateLimitType: typeof info['rateLimitType'] === 'string' ? info['rateLimitType'] : undefined,
           utilization: typeof info['utilization'] === 'number' ? info['utilization'] : undefined,
           data: info,
+        };
+      }
+
+      // Tool progress (long-running tool execution updates)
+      case EVENT_TOOL_PROGRESS: {
+        const tpMsg = msg as Record<string, unknown>;
+        return {
+          type: EVENT_TOOL_PROGRESS,
+          toolUseId: String(tpMsg['tool_use_id'] ?? ''),
+          toolName: String(tpMsg['tool_name'] ?? ''),
+          parentToolUseId: (tpMsg['parent_tool_use_id'] as string | null) ?? null,
+          elapsedTimeSeconds: typeof tpMsg['elapsed_time_seconds'] === 'number' ? tpMsg['elapsed_time_seconds'] : 0,
+          taskId: tpMsg['task_id'] as string | undefined,
+        };
+      }
+
+      // Tool use summary (AI-generated summary of preceding tool calls)
+      case EVENT_TOOL_USE_SUMMARY: {
+        const tsMsg = msg as Record<string, unknown>;
+        return {
+          type: EVENT_TOOL_USE_SUMMARY,
+          summary: String(tsMsg['summary'] ?? ''),
+          precedingToolUseIds: Array.isArray(tsMsg['preceding_tool_use_ids']) ? (tsMsg['preceding_tool_use_ids'] as string[]) : [],
+        };
+      }
+
+      // MCP authentication status
+      case EVENT_AUTH_STATUS: {
+        const asMsg = msg as Record<string, unknown>;
+        return {
+          type: EVENT_AUTH_STATUS,
+          isAuthenticating: asMsg['isAuthenticating'] === true,
+          output: Array.isArray(asMsg['output']) ? (asMsg['output'] as string[]) : [],
+          error: typeof asMsg['error'] === 'string' ? asMsg['error'] : undefined,
         };
       }
 

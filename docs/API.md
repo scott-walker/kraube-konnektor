@@ -22,7 +22,7 @@ new Claude(options?: ClientOptions, executor?: IExecutor)
 Execute a one-shot query and wait for the complete result.
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Find bugs in auth.ts', {
@@ -39,7 +39,7 @@ console.log(result.usage)
 Execute a query with real-time streaming output. Returns a `StreamHandle` with fluent callbacks, Node.js stream support, and backward-compatible async iteration.
 
 ```typescript
-import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -69,7 +69,7 @@ for await (const event of claude.stream('Analyze')) { /* ... */ }
 Open a bidirectional streaming channel — a persistent CLI process for multi-turn real-time conversation via `--input-format stream-json`.
 
 ```typescript
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 const chat = claude.chat()
@@ -95,7 +95,7 @@ await session.query('Now refactor the auth module')  // remembers context
 Schedule a recurring query (equivalent of CLI `/loop`).
 
 ```typescript
-import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/claude-connector'
+import { Claude, SCHED_RESULT, SCHED_ERROR } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const job = claude.loop('5m', 'Check if deployment finished')
@@ -109,7 +109,7 @@ job.stop()
 Run multiple independent queries concurrently.
 
 ```typescript
-import { Claude, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const [bugs, docs] = await claude.parallel([
@@ -187,7 +187,7 @@ console.log(`Reverted: +${rewind.insertions} -${rewind.deletions}`)
 Stop a running subagent task by its ID. Use with `task_started` stream events.
 
 ```typescript
-import { Claude, EVENT_TASK_STARTED } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TASK_STARTED } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.stream('Run analysis with subagents')
@@ -617,6 +617,15 @@ Discriminated union yielded by `stream()`. Check `event.type` to narrow.
 | `'task_progress'` | `EVENT_TASK_PROGRESS` | `taskId`, `description`, `usage`, `lastToolName?`, `summary?` | Subagent progress update |
 | `'task_notification'` | `EVENT_TASK_NOTIFICATION` | `taskId`, `status`, `outputFile`, `summary`, `usage?` | Subagent completed/failed/stopped |
 | `'rate_limit'` | `EVENT_RATE_LIMIT` | `status`, `resetsAt?`, `rateLimitType?`, `utilization?`, `data` | Rate limit warning or rejection (SDK mode) |
+| `'tool_progress'` | `EVENT_TOOL_PROGRESS` | `toolUseId`, `toolName`, `parentToolUseId`, `elapsedTimeSeconds`, `taskId?` | Tool execution progress |
+| `'tool_use_summary'` | `EVENT_TOOL_USE_SUMMARY` | `summary`, `precedingToolUseIds` | AI summary of tool usage |
+| `'auth_status'` | `EVENT_AUTH_STATUS` | `isAuthenticating`, `output`, `error?` | MCP auth status |
+| `'hook_started'` | `EVENT_HOOK_STARTED` | `hookId`, `hookName`, `hookEvent` | Hook started |
+| `'hook_progress'` | `EVENT_HOOK_PROGRESS` | `hookId`, `hookName`, `hookEvent`, `stdout`, `stderr`, `output` | Hook output |
+| `'hook_response'` | `EVENT_HOOK_RESPONSE` | `hookId`, `hookName`, `hookEvent`, `output`, `stdout`, `stderr`, `exitCode?`, `outcome` | Hook completed |
+| `'files_persisted'` | `EVENT_FILES_PERSISTED` | `files`, `failed`, `processedAt` | File checkpoint |
+| `'compact_boundary'` | `EVENT_COMPACT_BOUNDARY` | `trigger`, `preTokens` | Context compaction |
+| `'local_command_output'` | `EVENT_LOCAL_COMMAND_OUTPUT` | `content` | Slash command output (/voice, /cost) |
 
 ### Task event details
 
@@ -657,7 +666,7 @@ Emitted when a subagent task finishes.
 | `usage` | `{ totalTokens, toolUses, durationMs }?` | Resource usage |
 
 ```typescript
-import { Claude, EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ agentProgressSummaries: true })
 
@@ -814,7 +823,7 @@ Recurring query job. Created via `claude.loop()`.
 Create an in-process MCP server for custom tools.
 
 ```typescript
-import { createSdkMcpServer, sdkTool, Claude } from '@scottwalker/claude-connector'
+import { createSdkMcpServer, sdkTool, Claude } from '@scottwalker/kraube-konnektor'
 import { z } from 'zod/v4'
 
 const server = await createSdkMcpServer({
@@ -834,7 +843,7 @@ const claude = new Claude({ mcpServers: { prices: server } })
 Define a custom MCP tool with a Zod schema for use with `createSdkMcpServer()`.
 
 ```typescript
-import { sdkTool } from '@scottwalker/claude-connector'
+import { sdkTool } from '@scottwalker/kraube-konnektor'
 import { z } from 'zod/v4'
 
 const myTool = await sdkTool(
@@ -851,7 +860,7 @@ const myTool = await sdkTool(
 List saved sessions from disk.
 
 ```typescript
-import { listSessions } from '@scottwalker/claude-connector'
+import { listSessions } from '@scottwalker/kraube-konnektor'
 
 const sessions = await listSessions({ limit: 10 })
 for (const s of sessions) {
@@ -870,7 +879,7 @@ for (const s of sessions) {
 Get messages from an existing session.
 
 ```typescript
-import { getSessionMessages } from '@scottwalker/claude-connector'
+import { getSessionMessages } from '@scottwalker/kraube-konnektor'
 
 const messages = await getSessionMessages('session-abc-123', { limit: 50 })
 for (const m of messages) {
@@ -905,7 +914,7 @@ import {
   SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP,
   // Defaults
   DEFAULT_EXECUTABLE, DEFAULT_MODEL, DEFAULT_TIMEOUT_MS,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 ---
@@ -958,14 +967,14 @@ import type {
   TokenUsage, Message, ContentBlock,
   TextBlock, ToolUseBlock, ToolResultBlock,
   SessionOptions, SessionInfo,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 ---
 
 ## Errors
 
-All errors extend `ClaudeConnectorError`.
+All errors extend `KraubeKonnektorError`.
 
 | Error                | When                                        | Extra fields          |
 |----------------------|---------------------------------------------|-----------------------|
@@ -976,14 +985,14 @@ All errors extend `ClaudeConnectorError`.
 | `ValidationError`    | Invalid options or prompt                    | `field`               |
 
 ```typescript
-import { ClaudeConnectorError, CliNotFoundError } from '@scottwalker/claude-connector'
+import { KraubeKonnektorError, CliNotFoundError } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.query('...')
 } catch (e) {
   if (e instanceof CliNotFoundError) {
     console.error(`Install Claude Code or set executable path`)
-  } else if (e instanceof ClaudeConnectorError) {
+  } else if (e instanceof KraubeKonnektorError) {
     console.error(`Claude connector error: ${e.message}`)
   }
 }
@@ -1013,7 +1022,7 @@ interface ExecuteOptions {
 ### Custom executor example
 
 ```typescript
-import { Claude, type IExecutor } from '@scottwalker/claude-connector'
+import { Claude, type IExecutor } from '@scottwalker/kraube-konnektor'
 
 class MyExecutor implements IExecutor {
   async execute(args, options) { /* ... */ }

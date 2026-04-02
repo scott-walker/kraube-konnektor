@@ -1,6 +1,6 @@
 # Interactive Chat Example
 
-A real-world example of using `claude-connector` to build an interactive terminal chat with Claude Code.
+A real-world example of using `kraube-konnektor` to build an interactive terminal chat with Claude Code.
 
 ## Two modes
 

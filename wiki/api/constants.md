@@ -8,7 +8,7 @@ import {
   PERMISSION_PLAN,
   EFFORT_HIGH,
   SCHED_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 ## Event Types
@@ -24,7 +24,7 @@ Constants for stream event discrimination. Used with [`StreamHandle.on()`](./str
 | `EVENT_SYSTEM` | `'system'` | System/internal event |
 
 ```typescript
-import { EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/kraube-konnektor'
 
 claude.stream('Analyze code')
   .on(EVENT_TEXT, (text) => process.stdout.write(text))
@@ -46,7 +46,7 @@ Constants for task lifecycle events. Emitted during background task execution in
 | `EVENT_TASK_NOTIFICATION` | `'task_notification'` | Notification from a task (e.g., completion, failure) |
 
 ```typescript
-import { EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from '@scottwalker/claude-connector'
+import { EVENT_TASK_STARTED, EVENT_TASK_PROGRESS, EVENT_TASK_NOTIFICATION } from '@scottwalker/kraube-konnektor'
 
 claude.stream('Run background task')
   .on(EVENT_TASK_STARTED, (event) => console.log(`Task ${event.taskId} started`))
@@ -69,7 +69,7 @@ Control how Claude handles tool approval. Used in [`ClientOptions.permissionMode
 | `PERMISSION_AUTO` | `'auto'` | Automatically approve tools |
 
 ```typescript
-import { Claude, PERMISSION_PLAN, PERMISSION_AUTO } from '@scottwalker/claude-connector'
+import { Claude, PERMISSION_PLAN, PERMISSION_AUTO } from '@scottwalker/kraube-konnektor'
 
 // Read-only analysis
 const analyst = new Claude({ permissionMode: PERMISSION_PLAN })
@@ -81,7 +81,7 @@ const worker = new Claude({ permissionMode: PERMISSION_AUTO })
 ### Validation array
 
 ```typescript
-import { VALID_PERMISSION_MODES } from '@scottwalker/claude-connector'
+import { VALID_PERMISSION_MODES } from '@scottwalker/kraube-konnektor'
 // ['default', 'acceptEdits', 'plan', 'dontAsk', 'bypassPermissions', 'auto']
 ```
 
@@ -97,7 +97,7 @@ Control thinking depth. Used in [`ClientOptions.effortLevel`](./types#clientopti
 | `EFFORT_MAX` | `'max'` | Maximum depth |
 
 ```typescript
-import { Claude, EFFORT_HIGH, EFFORT_LOW } from '@scottwalker/claude-connector'
+import { Claude, EFFORT_HIGH, EFFORT_LOW } from '@scottwalker/kraube-konnektor'
 
 // Deep analysis
 const result = await claude.query('Find security vulnerabilities', {
@@ -113,7 +113,7 @@ const quick = await claude.query('Is this file valid JSON?', {
 ### Validation array
 
 ```typescript
-import { VALID_EFFORT_LEVELS } from '@scottwalker/claude-connector'
+import { VALID_EFFORT_LEVELS } from '@scottwalker/kraube-konnektor'
 // ['low', 'medium', 'high', 'max']
 ```
 
@@ -129,7 +129,7 @@ Event constants for [`ScheduledJob`](./scheduled-job). Used with `job.on()`.
 | `SCHED_STOP` | `'stop'` | When job is stopped |
 
 ```typescript
-import { SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/claude-connector'
+import { SCHED_RESULT, SCHED_ERROR, SCHED_TICK, SCHED_STOP } from '@scottwalker/kraube-konnektor'
 
 const job = claude.loop('5m', 'Check status')
 job.on(SCHED_TICK, (n) => console.log(`Tick ${n}`))
@@ -160,7 +160,7 @@ Stage values emitted by `INIT_EVENT_STAGE`:
 | `INIT_READY` | `'ready'` | Session is ready |
 
 ```typescript
-import { Claude, INIT_EVENT_STAGE, INIT_EVENT_READY, INIT_EVENT_ERROR } from '@scottwalker/claude-connector'
+import { Claude, INIT_EVENT_STAGE, INIT_EVENT_READY, INIT_EVENT_ERROR } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 claude.on(INIT_EVENT_STAGE, (stage, msg) => console.log(`[${stage}] ${msg}`))
@@ -180,7 +180,7 @@ Discriminators for message content blocks in [`Message.content`](./types#message
 | `BLOCK_TOOL_RESULT` | `'tool_result'` | Tool result block |
 
 ```typescript
-import { BLOCK_TEXT, BLOCK_TOOL_USE, BLOCK_TOOL_RESULT } from '@scottwalker/claude-connector'
+import { BLOCK_TEXT, BLOCK_TOOL_USE, BLOCK_TOOL_RESULT } from '@scottwalker/kraube-konnektor'
 
 for (const msg of result.messages) {
   if (typeof msg.content === 'string') continue
@@ -246,5 +246,5 @@ The `INTERVAL_MULTIPLIERS` record maps unit strings to their millisecond values.
 | `DEFAULT_TIMEOUT_MS` | `600000` | Default timeout (10 minutes) |
 
 ```typescript
-import { DEFAULT_EXECUTABLE, DEFAULT_MODEL, DEFAULT_TIMEOUT_MS } from '@scottwalker/claude-connector'
+import { DEFAULT_EXECUTABLE, DEFAULT_MODEL, DEFAULT_TIMEOUT_MS } from '@scottwalker/kraube-konnektor'
 ```

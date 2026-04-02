@@ -71,7 +71,7 @@ import {
   PERMISSION_AUTO,
   PERMISSION_BYPASS,
   PERMISSION_DONT_ASK,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 | Constant | Value | Description |
@@ -140,7 +140,7 @@ import {
   Claude,
   PERMISSION_PLAN,
   PERMISSION_ACCEPT_EDITS,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ permissionMode: PERMISSION_PLAN })
 

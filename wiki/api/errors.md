@@ -1,22 +1,22 @@
 # Errors
 
-All errors thrown by claude-connector extend `ClaudeConnectorError`. This allows catching any library error uniformly while still handling specific cases.
+All errors thrown by kraube-konnektor extend `KraubeKonnektorError`. This allows catching any library error uniformly while still handling specific cases.
 
 ```typescript
 import {
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 ```
 
 ## Error Hierarchy
 
 ```
-ClaudeConnectorError (base)
+KraubeKonnektorError (base)
   +-- CliNotFoundError
   +-- CliExecutionError
   +-- CliTimeoutError
@@ -24,20 +24,20 @@ ClaudeConnectorError (base)
   +-- ValidationError
 ```
 
-## ClaudeConnectorError
+## KraubeKonnektorError
 
-Base error class for all claude-connector errors.
+Base error class for all kraube-konnektor errors.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `name` | `string` | Always `'ClaudeConnectorError'` |
+| `name` | `string` | Always `'KraubeKonnektorError'` |
 | `message` | `string` | Human-readable error description |
 
 ```typescript
 try {
   await claude.query('...')
 } catch (e) {
-  if (e instanceof ClaudeConnectorError) {
+  if (e instanceof KraubeKonnektorError) {
     // Any library error
     console.error(`Claude connector error: ${e.message}`)
   }
@@ -58,7 +58,7 @@ Thrown when the Claude Code CLI binary cannot be found at the specified path.
 - `claude` is not found in `PATH` (when using the default)
 
 ```typescript
-import { CliNotFoundError } from '@scottwalker/claude-connector'
+import { CliNotFoundError } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.query('...')
@@ -87,7 +87,7 @@ Thrown when the CLI process exits with a non-zero code.
 - The model returns an error
 
 ```typescript
-import { CliExecutionError } from '@scottwalker/claude-connector'
+import { CliExecutionError } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.query('...')
@@ -113,7 +113,7 @@ Thrown when the CLI process exceeds the configured timeout.
 - The configured timeout is exceeded
 
 ```typescript
-import { CliTimeoutError, DEFAULT_TIMEOUT_MS } from '@scottwalker/claude-connector'
+import { CliTimeoutError, DEFAULT_TIMEOUT_MS } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.query('Complex task...')
@@ -139,7 +139,7 @@ Thrown when CLI output cannot be parsed into the expected format.
 - Stream-json output contains malformed lines
 
 ```typescript
-import { ParseError } from '@scottwalker/claude-connector'
+import { ParseError } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.query('...')
@@ -168,7 +168,7 @@ Thrown when invalid options or prompts are provided to the client.
 - `ClientOptions` or `QueryOptions` contain invalid values
 
 ```typescript
-import { ValidationError } from '@scottwalker/claude-connector'
+import { ValidationError } from '@scottwalker/kraube-konnektor'
 
 try {
   const claude = new Claude({ permissionMode: 'invalid' as any })
@@ -185,13 +185,13 @@ Handle errors from most specific to least specific:
 
 ```typescript
 import {
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 try {
   const result = await claude.query('Do work')
@@ -206,10 +206,10 @@ try {
     // Unexpected CLI output format
   } else if (e instanceof ValidationError) {
     // Fix the options
-  } else if (e instanceof ClaudeConnectorError) {
+  } else if (e instanceof KraubeKonnektorError) {
     // Any other library error
   } else {
-    // Not a claude-connector error
+    // Not a kraube-konnektor error
     throw e
   }
 }

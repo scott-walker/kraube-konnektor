@@ -1,11 +1,11 @@
 # Examples
 
-Complete cookbook covering every feature of `@scottwalker/claude-connector`.
+Complete cookbook covering every feature of `@scottwalker/kraube-konnektor`.
 
 All examples use ESM imports:
 
 ```ts
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 ```
 
 ---
@@ -126,7 +126,7 @@ import {
   EVENT_RESULT,
   EVENT_ERROR,
   EVENT_SYSTEM,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -163,7 +163,7 @@ for await (const event of handle) {
 ### Collect stream into a string
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -190,7 +190,7 @@ import {
   EVENT_TEXT,
   EVENT_TOOL_USE,
   EVENT_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -243,7 +243,7 @@ import {
   ChatHandle,
   EVENT_TEXT,
   EVENT_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -335,7 +335,7 @@ const result = await session.query('Try a different approach')
 ### Streaming within a session
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const session = claude.session()
@@ -385,7 +385,7 @@ import {
   SCHED_ERROR,
   SCHED_TICK,
   SCHED_STOP,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -479,7 +479,7 @@ import {
   EFFORT_MEDIUM,
   EFFORT_HIGH,
   EFFORT_MAX,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ effortLevel: EFFORT_LOW })    // fast, shallow
 const claude = new Claude({ effortLevel: EFFORT_MEDIUM })  // balanced
@@ -535,7 +535,7 @@ import {
   PERMISSION_AUTO,
   PERMISSION_BYPASS,
   PERMISSION_DONT_ASK,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 // Prompt on first use (default behavior)
 new Claude({ permissionMode: PERMISSION_DEFAULT })
@@ -788,7 +788,7 @@ import {
   Claude,
   PERMISSION_PLAN,
   PERMISSION_ACCEPT_EDITS,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   agents: {
@@ -968,7 +968,7 @@ import {
   INIT_EVENT_STAGE,
   INIT_EVENT_READY,
   INIT_EVENT_ERROR,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ model: 'sonnet' })
 
@@ -1009,7 +1009,7 @@ claude.close()
 Use a specific Claude Code binary.
 
 ```ts
-import { Claude, DEFAULT_EXECUTABLE } from '@scottwalker/claude-connector'
+import { Claude, DEFAULT_EXECUTABLE } from '@scottwalker/kraube-konnektor'
 
 // Default executable is 'claude'
 console.log(DEFAULT_EXECUTABLE) // 'claude'
@@ -1040,7 +1040,7 @@ import {
   PERMISSION_ACCEPT_EDITS,
   EFFORT_MEDIUM,
   EFFORT_MAX,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({
   model: 'sonnet',
@@ -1075,18 +1075,18 @@ const result = await claude.query('Fix the critical bug NOW', {
 
 ## Error Handling
 
-All library errors extend `ClaudeConnectorError`.
+All library errors extend `KraubeKonnektorError`.
 
 ```ts
 import {
   Claude,
-  ClaudeConnectorError,
+  KraubeKonnektorError,
   CliNotFoundError,
   CliExecutionError,
   CliTimeoutError,
   ParseError,
   ValidationError,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 
@@ -1109,7 +1109,7 @@ try {
   } else if (err instanceof ValidationError) {
     // Invalid options
     console.error(`Invalid field: ${err.field}`)
-  } else if (err instanceof ClaudeConnectorError) {
+  } else if (err instanceof KraubeKonnektorError) {
     // Catch-all for any library error
     console.error(err.message)
   }
@@ -1158,7 +1158,7 @@ import {
   BLOCK_TEXT,
   BLOCK_TOOL_USE,
   BLOCK_TOOL_RESULT,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const result = await claude.query('Explain the auth module')
@@ -1239,7 +1239,7 @@ const claude = new Claude({
 Define MCP tools directly in JavaScript — no external server process required.
 
 ```ts
-import { createSdkMcpServer, sdkTool } from '@scottwalker/claude-connector'
+import { createSdkMcpServer, sdkTool } from '@scottwalker/kraube-konnektor'
 import { z } from 'zod/v4'
 
 const server = await createSdkMcpServer({
@@ -1414,7 +1414,7 @@ const claude = new Claude({
 List and inspect sessions programmatically.
 
 ```ts
-import { listSessions, getSessionMessages } from '@scottwalker/claude-connector'
+import { listSessions, getSessionMessages } from '@scottwalker/kraube-konnektor'
 
 const sessions = await listSessions({ dir: '/my/project' })
 const messages = await getSessionMessages(sessions[0].sessionId)
@@ -1460,7 +1460,7 @@ import {
   type ExecuteOptions,
   type QueryResult,
   type StreamEvent,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const mockExecutor: IExecutor = {
   async execute(args: readonly string[], options: ExecuteOptions): Promise<QueryResult> {

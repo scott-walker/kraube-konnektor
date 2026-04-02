@@ -3,7 +3,7 @@
 Real-time integration of Claude Code into any Node.js application.
 
 ```ts
-import { Claude } from '@scottwalker/claude-connector'
+import { Claude } from '@scottwalker/kraube-konnektor'
 ```
 
 ---
@@ -60,7 +60,7 @@ import { Claude } from '@scottwalker/claude-connector'
 Register typed callbacks, then consume with `.done()`:
 
 ```ts
-import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/kraube-konnektor'
 
 const result = await claude.stream('Refactor the auth module')
   .on(EVENT_TEXT, (text) => {
@@ -99,7 +99,7 @@ console.log(text)
 With callbacks still firing:
 
 ```ts
-import { Claude, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const text = await claude.stream('Summarize README.md')
   .on(EVENT_TOOL_USE, (e) => console.log(`[${e.toolName}]`))
@@ -155,7 +155,7 @@ readable.on('end', () => {
 `StreamHandle` implements `AsyncIterable<StreamEvent>` — use `for await` for full control:
 
 ```ts
-import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR, EVENT_SYSTEM } from '@scottwalker/kraube-konnektor'
 
 for await (const event of claude.stream('Analyze the codebase')) {
   switch (event.type) {
@@ -187,6 +187,15 @@ for await (const event of claude.stream('Analyze the codebase')) {
 | `result` | `EVENT_RESULT` | `(event: { text, sessionId, usage, cost, durationMs })` | Final result |
 | `error` | `EVENT_ERROR` | `(event: { message, code? })` | Error |
 | `system` | `EVENT_SYSTEM` | `(event: { subtype, data })` | System event |
+| `tool_progress` | `EVENT_TOOL_PROGRESS` | `(event: { toolUseId, toolName, elapsedTimeSeconds, ... })` | Tool execution progress |
+| `tool_use_summary` | `EVENT_TOOL_USE_SUMMARY` | `(event: { summary, precedingToolUseIds })` | AI summary of tool usage |
+| `auth_status` | `EVENT_AUTH_STATUS` | `(event: { isAuthenticating, output, error? })` | MCP auth status |
+| `hook_started` | `EVENT_HOOK_STARTED` | `(event: { hookId, hookName, hookEvent })` | Hook started |
+| `hook_progress` | `EVENT_HOOK_PROGRESS` | `(event: { hookId, hookName, stdout, stderr, ... })` | Hook output |
+| `hook_response` | `EVENT_HOOK_RESPONSE` | `(event: { hookId, hookName, outcome, exitCode?, ... })` | Hook completed |
+| `files_persisted` | `EVENT_FILES_PERSISTED` | `(event: { files, failed, processedAt })` | File checkpoint |
+| `compact_boundary` | `EVENT_COMPACT_BOUNDARY` | `(event: { trigger, preTokens })` | Context compaction |
+| `local_command_output` | `EVENT_LOCAL_COMMAND_OUTPUT` | `(event: { content })` | Slash command output |
 
 ---
 
@@ -199,7 +208,7 @@ for await (const event of claude.stream('Analyze the codebase')) {
 `.send()` sends a prompt and returns a promise that resolves when the turn completes:
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const chat = claude.chat()
   .on(EVENT_TEXT, (text) => process.stdout.write(text))
@@ -366,7 +375,7 @@ app.get('/ai/stream', async (req, reply) => {
 Stream structured events to the browser:
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT, EVENT_ERROR } from '@scottwalker/kraube-konnektor'
 
 app.get('/ai/sse', (req, res) => {
   res.writeHead(200, {
@@ -416,7 +425,7 @@ Real-time bidirectional communication over WebSocket:
 
 ```ts
 import { WebSocketServer } from 'ws'
-import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const wss = new WebSocketServer({ port: 8080 })
 const claude = new Claude({ useSdk: false })
@@ -593,7 +602,7 @@ claude.stream('Write a commit message for the staged changes').toReadable()
 
 ```ts
 import { createWriteStream } from 'node:fs'
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const fileLog = createWriteStream('session.log', { flags: 'a' })
 
@@ -617,7 +626,7 @@ fileLog.end()
 ### Progress Tracking
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 let charCount = 0
 let toolCount = 0
@@ -639,7 +648,7 @@ console.log(`\nOutput: ${charCount} chars, ${toolCount} tools, ${result.duration
 ### Token Budget Monitoring
 
 ```ts
-import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const MAX_COST = 1.00 // $1 limit
 
@@ -655,7 +664,7 @@ const result = await claude.stream('Analyze the entire repo', { maxBudget: MAX_C
 ### Tool Activity Logger
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const tools: Array<{ name: string; timestamp: number }> = []
 const startTime = Date.now()
@@ -678,7 +687,7 @@ for (const t of tools) {
 Multi-turn streaming with context persistence:
 
 ```ts
-import { EVENT_TEXT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const session = claude.session()
 
@@ -720,7 +729,7 @@ console.log('API review:', api.slice(0, 100))
 ### Timeout and Abort
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 
@@ -744,7 +753,7 @@ try {
 ### Error Handling
 
 ```ts
-import { CliNotFoundError, CliExecutionError, CliTimeoutError, EVENT_TEXT, EVENT_ERROR } from '@scottwalker/claude-connector'
+import { CliNotFoundError, CliExecutionError, CliTimeoutError, EVENT_TEXT, EVENT_ERROR } from '@scottwalker/kraube-konnektor'
 
 try {
   await claude.stream('Do something')
@@ -770,7 +779,7 @@ try {
 
 ```ts
 import TelegramBot from 'node-telegram-bot-api'
-import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 const claude = new Claude({ useSdk: false, permissionMode: PERMISSION_PLAN })
@@ -802,7 +811,7 @@ bot.on('message', async (msg) => {
 
 ```ts
 import { App } from '@slack/bolt'
-import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, PERMISSION_PLAN } from '@scottwalker/kraube-konnektor'
 
 const app = new App({ token: process.env.SLACK_TOKEN!, signingSecret: process.env.SLACK_SECRET! })
 const claude = new Claude({ useSdk: false, permissionMode: PERMISSION_PLAN })
@@ -847,7 +856,7 @@ app.message('stream', async ({ message, client }) => {
 
 ```ts
 import ora from 'ora'
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const spinner = ora('Thinking...').start()
 let hasText = false
@@ -875,7 +884,7 @@ console.log(`\n✓ Done in ${result.durationMs}ms`)
 
 ```ts
 import * as readline from 'node:readline'
-import { EVENT_TEXT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
 const chat = claude.chat()
@@ -901,7 +910,7 @@ ask()
 ### CI/CD Pipeline Reporter
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE, PERMISSION_ACCEPT_EDITS } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE, PERMISSION_ACCEPT_EDITS } from '@scottwalker/kraube-konnektor'
 
 const reportStream = createWriteStream('ci-report.txt')
 
@@ -935,7 +944,7 @@ Main process → renderer streaming via IPC:
 ```ts
 // main.ts (Electron main process)
 import { ipcMain } from 'electron'
-import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 ipcMain.handle('ai:stream', async (event, prompt: string) => {
   await claude.stream(prompt)
@@ -974,7 +983,7 @@ Offload streaming to a worker to keep the main thread free:
 ```ts
 // worker.ts
 import { parentPort, workerData } from 'node:worker_threads'
-import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 

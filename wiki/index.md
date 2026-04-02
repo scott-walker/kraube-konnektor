@@ -17,7 +17,7 @@ hero:
       link: /api/
     - theme: alt
       text: View on GitHub
-      link: https://github.com/scott-walker/claude-connector
+      link: https://github.com/scott-walker/kraube-konnektor
 
 features:
   - icon:

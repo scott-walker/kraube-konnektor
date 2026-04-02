@@ -1,5 +1,5 @@
 {
-  "name": "claude-connector-interactive-chat",
+  "name": "kraube-konnektor-interactive-chat",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "stream": "npx tsx src/chat-stream.ts"
   },
   "dependencies": {
-    "@scottwalker/claude-connector": "file:../../"
+    "@scottwalker/kraube-konnektor": "file:../../"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

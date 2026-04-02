@@ -14,7 +14,7 @@ import {
   EVENT_RESULT,
   EVENT_ERROR,
   EVENT_SYSTEM,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -55,7 +55,7 @@ console.log(text)
 With callbacks still firing:
 
 ```ts
-import { Claude, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const text = await claude.stream('Summarize README.md')
   .on(EVENT_TOOL_USE, (e) => console.log(`[${e.toolName}]`))
@@ -93,7 +93,7 @@ import {
   EVENT_RESULT,
   EVENT_ERROR,
   EVENT_SYSTEM,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -121,7 +121,7 @@ for await (const event of claude.stream('Analyze the codebase')) {
 ### Collect Stream into a String
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -143,11 +143,20 @@ console.log(fullText)
 | `result` | `EVENT_RESULT` | `(event: { text, sessionId, usage, cost, durationMs })` | Final result (always last) |
 | `error` | `EVENT_ERROR` | `(event: { message, code? })` | Error during execution |
 | `system` | `EVENT_SYSTEM` | `(event: { subtype, data })` | System/internal event |
+| `tool_progress` | `EVENT_TOOL_PROGRESS` | `(event: { toolUseId, toolName, elapsedTimeSeconds, ... })` | Tool execution progress |
+| `tool_use_summary` | `EVENT_TOOL_USE_SUMMARY` | `(event: { summary, precedingToolUseIds })` | AI summary of tool usage |
+| `auth_status` | `EVENT_AUTH_STATUS` | `(event: { isAuthenticating, output, error? })` | MCP auth status |
+| `hook_started` | `EVENT_HOOK_STARTED` | `(event: { hookId, hookName, hookEvent })` | Hook started |
+| `hook_progress` | `EVENT_HOOK_PROGRESS` | `(event: { hookId, hookName, stdout, stderr, ... })` | Hook output |
+| `hook_response` | `EVENT_HOOK_RESPONSE` | `(event: { hookId, hookName, outcome, exitCode?, ... })` | Hook completed |
+| `files_persisted` | `EVENT_FILES_PERSISTED` | `(event: { files, failed, processedAt })` | File checkpoint |
+| `compact_boundary` | `EVENT_COMPACT_BOUNDARY` | `(event: { trigger, preTokens })` | Context compaction |
+| `local_command_output` | `EVENT_LOCAL_COMMAND_OUTPUT` | `(event: { content })` | Slash command output |
 
 ## Progress Tracking
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 let charCount = 0
 let toolCount = 0
@@ -169,7 +178,7 @@ console.log(`\nOutput: ${charCount} chars, ${toolCount} tools, ${result.duration
 ## Tool Activity Logger
 
 ```ts
-import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_TOOL_USE } from '@scottwalker/kraube-konnektor'
 
 const tools: Array<{ name: string; timestamp: number }> = []
 const startTime = Date.now()
@@ -190,7 +199,7 @@ for (const t of tools) {
 ## Token Budget Monitoring
 
 ```ts
-import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/claude-connector'
+import { EVENT_TEXT, EVENT_RESULT } from '@scottwalker/kraube-konnektor'
 
 const MAX_COST = 1.00 // $1 limit
 
@@ -206,7 +215,7 @@ const result = await claude.stream('Analyze the entire repo', { maxBudget: MAX_C
 ## Timeout and Abort
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude({ useSdk: false })
 
@@ -236,7 +245,7 @@ import {
   EVENT_TASK_STARTED,
   EVENT_TASK_PROGRESS,
   EVENT_TASK_NOTIFICATION,
-} from '@scottwalker/claude-connector'
+} from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 
@@ -261,7 +270,7 @@ const result = await claude.stream('Refactor the entire src/ directory')
 Cancel a specific stream without affecting other queries:
 
 ```ts
-import { Claude, EVENT_TEXT } from '@scottwalker/claude-connector'
+import { Claude, EVENT_TEXT } from '@scottwalker/kraube-konnektor'
 
 const claude = new Claude()
 const controller = new AbortController()

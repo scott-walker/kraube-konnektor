@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claude Connector</title>
+  <title>Kraube Konnektor</title>
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Claude Connector — Claude Code in Your Code">
+  <meta property="og:title" content="Kraube Konnektor — Claude Code in Your Code">
   <meta property="og:description" content="The entire power of Claude Code — reading files, editing code, running commands, browsing the web — available as a simple Node.js API.">
-  <meta property="og:image" content="https://scott-walker.github.io/claude-connector/assets/og-image.png">
-  <meta property="og:url" content="https://scott-walker.github.io/claude-connector/">
+  <meta property="og:image" content="https://scott-walker.github.io/kraube-konnektor/assets/og-image.png">
+  <meta property="og:url" content="https://scott-walker.github.io/kraube-konnektor/">
   <meta property="og:type" content="website">
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Underdog&family=Comic+Neue:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
@@ -146,7 +146,7 @@
       justify-content: space-between;
     }
     nav .logo {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 26px;
       letter-spacing: 2px;
       color: var(--text);
@@ -168,7 +168,7 @@
       padding: 8px 20px;
       border: 2px solid var(--border-comic);
       font-size: 14px;
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       letter-spacing: 1px;
       text-decoration: none;
       transition: all 0.15s;
@@ -201,7 +201,7 @@
     @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
 
     h1 {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: clamp(40px, 5.5vw, 72px);
       letter-spacing: 4px;
       line-height: 1.05;
@@ -233,7 +233,7 @@
       gap: 10px;
       padding: 14px 32px;
       font-size: 16px;
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       letter-spacing: 1.5px;
       text-decoration: none;
       transition: all 0.15s;
@@ -342,7 +342,7 @@
     .prop { color: #7B8CDE; }
 
     .section-label {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 16px;
       letter-spacing: 4px;
       color: var(--accent-bright);
@@ -354,7 +354,7 @@
       border: 2px solid var(--accent-dim);
     }
     h2 {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: clamp(36px, 5vw, 56px);
       letter-spacing: 3px;
       margin-bottom: 16px;
@@ -396,7 +396,7 @@
     .feature-icon.yellow { background: rgba(240, 160, 48, 0.15); color: var(--yellow); }
     .feature-icon.red { background: rgba(231, 76, 60, 0.15); color: var(--red-autumn); }
     .feature-card h3 {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 22px;
       letter-spacing: 1.5px;
       margin-bottom: 8px;
@@ -445,7 +445,7 @@
     .usecase.uc-yellow::before { background: linear-gradient(90deg, var(--yellow), #a3e635); }
     .usecase.uc-red::before { background: linear-gradient(90deg, var(--red-autumn), var(--orange)); }
     .usecase .uc-number {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 64px;
       line-height: 1;
       margin-bottom: 16px;
@@ -456,7 +456,7 @@
     .usecase.uc-yellow .uc-number { color: rgba(240, 160, 48, 0.2); }
     .usecase.uc-red .uc-number { color: rgba(231, 76, 60, 0.2); }
     .usecase h3 {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 24px;
       letter-spacing: 1.5px;
       margin-bottom: 12px;
@@ -473,7 +473,7 @@
       padding: 4px 14px;
       font-size: 12px;
       font-weight: 700;
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       letter-spacing: 1px;
       border: 2px solid var(--border-comic);
     }
@@ -513,7 +513,7 @@
       text-align: center;
     }
     .stat-value {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 36px;
       letter-spacing: 1px;
       color: var(--accent-bright);
@@ -537,7 +537,7 @@
     }
     .comp-card.before { background: var(--bg-card); }
     .comp-card.after { background: var(--bg-card); border-color: var(--accent-dim); }
-    .comp-card h3 { font-family: 'Bangers', cursive; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+    .comp-card h3 { font-family: 'Underdog', cursive; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
     .comp-card.before h3 { color: var(--text-muted); }
     .comp-card.after h3 { color: var(--accent-bright); }
     .comp-card pre { font-size: 13px; line-height: 1.8; background: transparent; padding: 0; }
@@ -592,7 +592,7 @@
 
     .starburst {
       position: absolute;
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       color: var(--accent-bright);
       font-size: 20px;
       letter-spacing: 3px;
@@ -620,7 +620,7 @@
       text-align: left;
     }
     .npm-banner-text h3 {
-      font-family: 'Bangers', cursive;
+      font-family: 'Underdog', cursive;
       font-size: 24px;
       letter-spacing: 1px;
     }
@@ -685,7 +685,7 @@
       .hero { padding-top: 56px; padding-bottom: 16px; min-height: 100vh; height: 100vh; overflow: hidden; }
       .hero h1 { margin-bottom: 8px; font-size: 42px !important; }
       .badge { font-size: 9px !important; padding: 3px 10px !important; margin-bottom: 16px !important; }
-      .hero img[alt="Claude Connector"] { width: 160px !important; margin: 6px 0 !important; }
+      .hero img[alt="Kraube Konnektor"] { width: 160px !important; margin: 6px 0 !important; }
       .hero-sub { font-size: 12px; margin-bottom: 20px; line-height: 1.6; text-align: center; max-width: 100%; padding: 0 8px; }
       .hero-actions { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
       .btn { padding: 7px 12px; font-size: 11px; letter-spacing: 1px; }
@@ -796,23 +796,23 @@
 <!-- Hero -->
 <section class="hero">
   <div class="container">
-    <div class="badge"><i data-lucide="sparkles" style="width:14px;height:14px"></i> Available on npm &mdash; v0.5.4</div>
+    <div class="badge"><i data-lucide="sparkles" style="width:14px;height:14px"></i> Available on npm &mdash; v0.6.0</div>
     <h1>Claude Code<br><span class="gradient">In your code</span></h1>
-    <img src="assets/logo.png" alt="Claude Connector" style="width:200px;margin:20px 0 8px">
-    <div style="font-family:'Bangers',cursive;font-size:22px;letter-spacing:3px;margin-bottom:16px"><span style="color:var(--accent)">Claude</span> <span style="color:#FFFFFF">Connector</span></div>
+    <img src="assets/logo.png" alt="Kraube Konnektor" style="width:200px;margin:20px 0 8px">
+    <div style="font-family:'Underdog',cursive;font-size:22px;letter-spacing:3px;margin-bottom:16px"><span style="color:var(--accent)">Kraube</span> <span style="color:#FFFFFF">Konnektor</span></div>
     <p class="hero-sub">
       The entire power of Claude Code &mdash; reading files, editing code, running commands, browsing the web &mdash; available as a simple Node.js API. No terminal. No copy-paste. Just <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-code);padding:1px 6px;border:1px solid var(--border);border-radius:0;font-size:inherit;color:var(--accent-bright)">import</code> and go.
     </p>
     <div class="hero-actions">
-      <a href="https://www.npmjs.com/package/@scottwalker/claude-connector" class="btn btn-npm" target="_blank" rel="noopener">
+      <a href="https://www.npmjs.com/package/@scottwalker/kraube-konnektor" class="btn btn-npm" target="_blank" rel="noopener">
         <i data-lucide="package" style="width:20px;height:20px"></i>
         View on npm
       </a>
-      <a href="https://github.com/scott-walker/claude-connector" class="btn btn-primary" target="_blank" rel="noopener">
+      <a href="https://github.com/scott-walker/kraube-konnektor" class="btn btn-primary" target="_blank" rel="noopener">
         <i data-lucide="github" style="width:20px;height:20px"></i>
         GitHub
       </a>
-      <a href="https://scott-walker.github.io/claude-connector/wiki/" class="btn btn-secondary" target="_blank" rel="noopener">
+      <a href="https://scott-walker.github.io/kraube-konnektor/wiki/" class="btn btn-secondary" target="_blank" rel="noopener">
         <i data-lucide="book-open" style="width:18px;height:18px"></i>
         Documentation
       </a>
@@ -821,7 +821,7 @@
     <div class="install-bar">
       <div class="install-cmd" onclick="copyInstall(this)" title="Click to copy">
         <span class="copy-hint">Copied!</span>
-        <span>$</span> npm install @scottwalker/claude-connector
+        <span>$</span> npm install @scottwalker/kraube-konnektor
       </div>
     </div>
 
@@ -847,7 +847,7 @@
         <div class="code-dot green"></div>
         <span>app.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({ <span class="prop">model</span>: <span class="str">'sonnet'</span> })
 <span class="kw">await</span> claude.<span class="fn">init</span>()
@@ -906,9 +906,9 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
 
     <div class="code-window" style="max-width:720px;margin:32px auto 0">
       <div class="code-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span style="margin-left:12px;font-size:12px;color:var(--text-muted)">terminal</span></div>
-<pre><span class="op">$</span> npx @scottwalker/claude-connector setup
+<pre><span class="op">$</span> npx @scottwalker/kraube-konnektor setup
 
-  <span class="fn">Claude Connector &mdash; Setup</span>
+  <span class="fn">Kraube Konnektor &mdash; Setup</span>
 
   <span class="str">&#10004;</span> Node.js 22.1.0
   <span class="str">&#10004;</span> Claude Code (2.1.87)
@@ -918,7 +918,7 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
 
   <span class="fn">Quick Start</span>
 
-  <span class="kw">import</span> { Claude } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+  <span class="kw">import</span> { Claude } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
   <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({
     model:          <span class="str">'sonnet'</span>,
@@ -956,8 +956,8 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
 # Good luck with error handling.</span></pre>
       </div>
       <div class="comp-card after">
-        <h3><i data-lucide="sparkles" style="width:16px;height:16px;vertical-align:middle;margin-right:6px"></i>After &mdash; claude-connector</h3>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+        <h3><i data-lucide="sparkles" style="width:16px;height:16px;vertical-align:middle;margin-right:6px"></i>After &mdash; kraube-konnektor</h3>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>()
 <span class="kw">await</span> claude.<span class="fn">init</span>()
@@ -1007,7 +1007,7 @@ graph TD
         <div class="code-dot green"></div>
         <span>monitor.ts</span>
       </div>
-<pre><span class="kw">import</span> { SCHED_RESULT, SCHED_ERROR } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { SCHED_RESULT, SCHED_ERROR } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// Check CI pipeline every 5 minutes</span>
 <span class="kw">const</span> job = claude.<span class="fn">loop</span>(<span class="str">'5m'</span>, <span class="str">'Check CI status and report failures'</span>)
@@ -1031,7 +1031,7 @@ job.<span class="fn">stop</span>()</pre>
         <div class="code-dot green"></div>
         <span>review-bot.ts</span>
       </div>
-<pre><span class="kw">import</span> { PERMISSION_PLAN } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { PERMISSION_PLAN } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// Periodic code review every 2 hours</span>
 <span class="kw">const</span> reviewer = claude.<span class="fn">loop</span>(<span class="str">'2h'</span>, <span class="str">'Review recent commits for bugs and security issues'</span>, {
@@ -1057,7 +1057,7 @@ job.<span class="fn">stop</span>()</pre>
         <div class="code-dot green"></div>
         <span>stream.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// Fluent API — register callbacks, await completion</span>
 <span class="kw">const</span> result = <span class="kw">await</span> claude.<span class="fn">stream</span>(<span class="str">'Refactor the auth module'</span>)
@@ -1081,7 +1081,7 @@ console.<span class="fn">log</span>(<span class="str">`Done in </span>${result.<
         <div class="code-dot green"></div>
         <span>stream-for-await.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_TOOL_USE, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// for-await works too — full control over each event</span>
 <span class="kw">for await</span> (<span class="kw">const</span> event <span class="kw">of</span> claude.<span class="fn">stream</span>(<span class="str">'Analyze this project'</span>)) {
@@ -1178,7 +1178,7 @@ console.<span class="fn">log</span>(<span class="str">`\nCost: $</span>${result.
         <div class="code-dot green"></div>
         <span>chat.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="kw">const</span> chat = claude.<span class="fn">chat</span>()
   .<span class="fn">on</span>(EVENT_TEXT, t =&gt; process.stdout.<span class="fn">write</span>(t))
@@ -1220,7 +1220,7 @@ chat.<span class="fn">end</span>()  <span class="cm">// graceful close</span></p
         <span>websocket.ts</span>
       </div>
 <pre><span class="kw">import</span> { WebSocketServer } <span class="kw">from</span> <span class="str">'ws'</span>
-<span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<span class="kw">import</span> { Claude, EVENT_TEXT, EVENT_RESULT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws) =&gt; {
   <span class="kw">const</span> chat = claude.<span class="fn">chat</span>()
@@ -1303,7 +1303,7 @@ wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws) =&gt;
         <div class="code-dot green"></div>
         <span>tools-allow.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, PERMISSION_PLAN } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, PERMISSION_PLAN } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// Only allow reading and searching — no edits, no bash</span>
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({
@@ -1337,7 +1337,7 @@ wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws) =&gt;
         <div class="code-dot green"></div>
         <span>tools-deny.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, PERMISSION_ACCEPT_EDITS } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, PERMISSION_ACCEPT_EDITS } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="cm">// Allow everything except web access and file deletion</span>
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({
@@ -1467,11 +1467,11 @@ wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws) =&gt;
         <span>terminal</span>
       </div>
 <pre><span class="cm"># Install from npm</span>
-<span class="op">$</span> npm install @scottwalker/claude-connector
+<span class="op">$</span> npm install @scottwalker/kraube-konnektor
 
 <span class="cm"># or with other package managers</span>
-<span class="op">$</span> yarn add @scottwalker/claude-connector
-<span class="op">$</span> pnpm add @scottwalker/claude-connector</pre>
+<span class="op">$</span> yarn add @scottwalker/kraube-konnektor
+<span class="op">$</span> pnpm add @scottwalker/kraube-konnektor</pre>
     </div>
 
     <div class="code-window" style="max-width:650px;margin:0 auto 48px;text-align:left">
@@ -1481,7 +1481,7 @@ wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws) =&gt;
         <div class="code-dot green"></div>
         <span>index.ts</span>
       </div>
-<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/claude-connector'</span>
+<pre><span class="kw">import</span> { Claude, EVENT_TEXT } <span class="kw">from</span> <span class="str">'@scottwalker/kraube-konnektor'</span>
 
 <span class="kw">const</span> claude = <span class="kw">new</span> <span class="fn">Claude</span>({ <span class="prop">model</span>: <span class="str">'sonnet'</span> })
 <span class="kw">await</span> claude.<span class="fn">init</span>()
@@ -1504,21 +1504,21 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
         </div>
         <div>
           <h3>Available on npm</h3>
-          <p>@scottwalker/claude-connector@0.3.0 &mdash; MIT License</p>
+          <p>@scottwalker/kraube-konnektor@0.6.0 &mdash; MIT License</p>
         </div>
       </div>
-      <a href="https://www.npmjs.com/package/@scottwalker/claude-connector" class="btn btn-npm" target="_blank" rel="noopener" style="margin:0">
+      <a href="https://www.npmjs.com/package/@scottwalker/kraube-konnektor" class="btn btn-npm" target="_blank" rel="noopener" style="margin:0">
         <i data-lucide="external-link" style="width:16px;height:16px"></i>
         npmjs.com
       </a>
     </div>
 
     <div class="hero-actions" style="margin-top:48px">
-      <a href="https://github.com/scott-walker/claude-connector" class="btn btn-primary" target="_blank" rel="noopener">
+      <a href="https://github.com/scott-walker/kraube-konnektor" class="btn btn-primary" target="_blank" rel="noopener">
         <i data-lucide="star" style="width:20px;height:20px"></i>
         Star on GitHub
       </a>
-      <a href="https://scott-walker.github.io/claude-connector/wiki/" class="btn btn-secondary" target="_blank" rel="noopener">
+      <a href="https://scott-walker.github.io/kraube-konnektor/wiki/" class="btn btn-secondary" target="_blank" rel="noopener">
         <i data-lucide="book-open" style="width:18px;height:18px"></i>
         Documentation
       </a>
@@ -1531,10 +1531,10 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
   <div class="container">
     <div style="display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap">
       <span>Built by <a href="https://github.com/scott-walker" target="_blank" rel="noopener">Scott Walker</a></span>
-      <a href="https://www.npmjs.com/package/@scottwalker/claude-connector" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px"><span style="font-family:'Bangers',cursive;font-size:16px;letter-spacing:1px">NPM</span></a>
-      <a href="https://github.com/scott-walker/claude-connector" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px"><i data-lucide="github" style="width:16px;height:16px"></i> GitHub</a>
+      <a href="https://www.npmjs.com/package/@scottwalker/kraube-konnektor" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px"><span style="font-family:'Underdog',cursive;font-size:16px;letter-spacing:1px">NPM</span></a>
+      <a href="https://github.com/scott-walker/kraube-konnektor" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px"><i data-lucide="github" style="width:16px;height:16px"></i> GitHub</a>
       <a href="https://t.me/productminds/60" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px"><i data-lucide="send" style="width:16px;height:16px"></i> ProductMinds</a>
-      <a href="https://github.com/scott-walker/claude-connector/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      <a href="https://github.com/scott-walker/kraube-konnektor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
     </div>
   </div>
 </footer>
@@ -1551,7 +1551,7 @@ console.<span class="fn">log</span>(result.<span class="prop">text</span>)
   }, 2000);
 
   function copyInstall(el) {
-    navigator.clipboard.writeText('npm install @scottwalker/claude-connector');
+    navigator.clipboard.writeText('npm install @scottwalker/kraube-konnektor');
     el.classList.add('copied');
     setTimeout(() => el.classList.remove('copied'), 1500);
   }

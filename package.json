@@ -1,6 +1,6 @@
 {
-  "name": "@scottwalker/claude-connector",
-  "version": "0.5.4",
+  "name": "@scottwalker/kraube-konnektor",
+  "version": "0.6.0",
   "description": "Programmatic Node.js interface for Claude Code CLI",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "claude-connector": "dist/cli/index.js"
+    "kraube-konnektor": "dist/cli/index.js"
   },
   "files": [
     "dist",
@@ -46,11 +46,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scott-walker/claude-connector.git"
+    "url": "git+https://github.com/scott-walker/kraube-konnektor.git"
   },
-  "homepage": "https://github.com/scott-walker/claude-connector#readme",
+  "homepage": "https://github.com/scott-walker/kraube-konnektor#readme",
   "bugs": {
-    "url": "https://github.com/scott-walker/claude-connector/issues"
+    "url": "https://github.com/scott-walker/kraube-konnektor/issues"
   },
   "engines": {
     "node": ">=18.0.0"
