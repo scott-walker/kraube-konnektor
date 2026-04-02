@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <img src="landing/assets/origin.png" alt="Kraube Konnektor" width="250" style="border-radius: 16px" />
+    <img src="etc/origin.png?v=2" alt="Kraube Konnektor" width="250" style="border-radius: 16px" />
   </picture>
 </p>
 
