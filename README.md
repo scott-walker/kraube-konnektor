@@ -1,5 +1,10 @@
 # Kraube Konnektor
 
+> [!WARNING]
+> **Deprecated — проект больше не поддерживается с 26 октября 2026 года.**
+> Разработка и выпуск обновлений прекращены. Использование в новых проектах не рекомендуется.
+> Репозиторий сохранён для справки и доступа к исходному коду.
+
 <p align="center">
   <picture>
     <img src="etc/origin.png?v=2" alt="Kraube Konnektor" width="250" style="border-radius: 16px" />
